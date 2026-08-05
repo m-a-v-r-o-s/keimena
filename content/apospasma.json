@@ -1,0 +1,231 @@
+{
+  "_meta": {
+    "compiled": "2026-08-05",
+    "purpose": "Per-book parameters for tools/apospasma.mjs -- the excerpt-PDF button that replaces the plain 'Απόσπασμα (PDF)' text link for every title that has a PDF excerpt (content/press.json's excerpt.pdf). See plan.md for the full spec and what remains.",
+    "technique": [
+      "Border art: Z-Image-Turbo, portrait 832x1248 (2:3), white/light linework on a black ground, no text in the prompt (D8 -- diffusion Greek is gibberish). Saved to tools/apospasma-src/<id>-border-raw.webp.",
+      "tools/apospasma.mjs keys the raw render's luminance to alpha (same method as imprintMark() in tools/covers.mjs / D15's imprint.webp), composites 'label_el' + 'title_el' as opentype.js vector glyph outlines in 'font_file' (never diffusion text), and writes public/apospasma/<id>.webp -- white artwork, real alpha channel, no baked colour.",
+      "The site recolours live: CSS mask-image: url(...) + background-color: var(--book-text), exactly how .head__imprint recolours public/imprint.webp. Never bake a colour into the asset."
+    ],
+    "font_dirs": [
+      "tools/fonts/apospasma/ (10 newly verified)",
+      "tools/fonts/ (GFS Didot, Literata -- already licensed, D1)"
+    ],
+    "font_verification": "Real cmap glyph-coverage check (fontTools), not Google Fonts' CSS subset claims -- most 'editorial serif' fonts people assume are Greek-capable are not (see plan.md §2 for the full tested list and why each of the 13 assigned here passed)."
+  },
+  "byBook": {
+    "o-fonos-einai-chrima": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Ο φόνος είναι χρήμα",
+      "font_family": "Cardo",
+      "font_file": "apospasma/Cardo-Regular.ttf",
+      "border_style": "ornate",
+      "border_prompt": "Ornate antique bookplate frame, symmetrical decorative border, portrait orientation, pure white engraved linework on solid black background, high contrast line art, thick intricate border with Greek meander key pattern and laurel motifs, empty plain dark center, no text, no letters, no numbers, no watermark, no signature, clean vector-like engraving style, classical Athenian architectural ornament, antique book plate design",
+      "border_seed": 4201,
+      "compose": {
+        "ornaments": true
+      },
+      "approved": true,
+      "approved_note": "User-approved 2026-08-05 after two revision rounds: title given deliberate hierarchy weight (76px vs label's 28px) rather than uniformly larger type, frame filled via a top/mid/bottom rule-and-diamond rhythm echoing the border's own flourishes rather than by inflating text."
+    },
+    "i-apati-einai-to-mellon": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Η απάτη είναι το μέλλον",
+      "font_family": "Alegreya",
+      "font_file": "apospasma/Alegreya-Regular.ttf",
+      "border_style": "minimalist",
+      "border_prompt": "Minimalist thin-line frame with a row of small evenly spaced dashes forming each corner accent, otherwise a single delicate rectangular hairline border. Portrait orientation, 2:3 aspect ratio (1024x1536). Pure white hairline linework on a solid black background. Empty, plain black center -- nothing crossing the exact middle of the frame. No text, no letters, no numbers, no watermark, no signature. High contrast, sparse vector-like engraving style.",
+      "border_seed": null,
+      "border_seed_note": "Generated via ChatGPT's image tool (no numeric seed exposed), not Z-Image-Turbo -- HF ZeroGPU quota ran out mid-batch.",
+      "compose": {
+        "ornaments": false,
+        "labelSize": 34
+      },
+      "approved": true,
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    },
+    "i-via-tis-apotychias": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Η βία της αποτυχίας",
+      "font_family": "Vollkorn",
+      "font_file": "apospasma/Vollkorn-Regular.ttf",
+      "border_style": "minimalist",
+      "border_prompt": "Minimalist thin-line frame: a single delicate rectangular border where the left edge is a slightly heavier double line and the other three edges are a plain hairline, a quiet visual imbalance. Portrait orientation, 2:3 aspect ratio (1024x1536). Pure white hairline linework on a solid black background. Empty, plain black center -- nothing crossing the exact middle of the frame. No text, no letters, no numbers, no watermark, no signature. High contrast, sparse vector-like engraving style.",
+      "border_seed": null,
+      "border_seed_note": "Generated via ChatGPT's image tool (no numeric seed exposed), not Z-Image-Turbo -- HF ZeroGPU quota ran out mid-batch.",
+      "compose": {
+        "ornaments": false,
+        "labelSize": 34
+      },
+      "approved": true,
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    },
+    "to-kinima-tis-aftoktonias": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Το κίνημα της αυτοκτονίας",
+      "font_family": "EB Garamond",
+      "font_file": "apospasma/EB-Garamond-Regular.ttf",
+      "border_style": "minimalist",
+      "border_prompt": "Extremely minimalist thin-line frame, portrait orientation, pure white hairline linework on solid black background, a single plain rectangular hairline border with tiny short tick marks at each corner only, vast resting black field, empty plain dark center, no text, no letters, no numbers, no watermark, no signature, austere restrained engraving style, sparse vector-like linework, high contrast",
+      "border_seed": 9052,
+      "compose": {
+        "ornaments": false,
+        "labelSize": 34
+      },
+      "approved": true,
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    },
+    "i-epochi-tis-ypokrisias": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Η εποχή της υποκρισίας",
+      "font_family": "Source Serif 4",
+      "font_file": "apospasma/Source-Serif-4-Regular.ttf",
+      "border_style": "minimalist",
+      "border_prompt": "Minimalist thin-line frame, portrait orientation, pure white hairline linework on solid black background, a plain rectangular border where the top and bottom edges are drawn as a delicate double parallel line and the two side edges are a single hairline, subtle restrained motif, empty plain dark center, no text, no letters, no numbers, no watermark, no signature, restrained modern engraving style, sparse vector-like linework, high contrast",
+      "border_seed": 4417,
+      "compose": {
+        "ornaments": false,
+        "labelSize": 34
+      },
+      "approved": true,
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    },
+    "palia-poly-palia": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Παλιά, πολύ παλιά",
+      "font_family": "Noto Serif",
+      "font_file": "apospasma/Noto-Serif-Regular.ttf",
+      "border_style": "minimalist",
+      "border_prompt": "Minimalist antique thin-line frame: a delicate rectangular border with one small restrained flourish curl at each corner only, no dense floral pattern, vast resting black field. Portrait orientation, 2:3 aspect ratio (1024x1536). Pure white hairline linework on a solid black background. Empty, plain black center -- nothing crossing the exact middle of the frame. No text, no letters, no numbers, no watermark, no signature. High contrast, fine vector-like engraving style.",
+      "border_seed": null,
+      "border_seed_note": "Generated via ChatGPT's image tool (no numeric seed exposed), not Z-Image-Turbo -- HF ZeroGPU quota ran out mid-batch.",
+      "compose": {
+        "ornaments": false,
+        "labelSize": 34
+      },
+      "approved": true,
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    },
+    "amyna-zonis": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Άμυνα ζώνης",
+      "font_family": "GFS Didot",
+      "font_file": "GFSDidot-Regular.ttf",
+      "font_file_note": "Lives in tools/fonts/, not tools/fonts/apospasma/ -- already licensed for this project (D1). GFS Didot has 400 weight only, no italic (D1) -- do not request bold/italic from it.",
+      "border_style": "minimalist",
+      "border_prompt": "Minimalist geometric thin-line frame: a plain rectangular border with a subtle angular zone-line accent bracket at each corner, echoing court lines, restrained sporting geometry. Portrait orientation, 2:3 aspect ratio (1024x1536). Pure white hairline linework on a solid black background. Empty, plain black center -- nothing crossing the exact middle of the frame. No text, no letters, no numbers, no watermark, no signature. High contrast, sparse vector-like engraving style.",
+      "border_seed": null,
+      "border_seed_note": "Generated via ChatGPT's image tool (no numeric seed exposed), not Z-Image-Turbo -- HF ZeroGPU quota ran out mid-batch.",
+      "compose": {
+        "ornaments": false,
+        "labelSize": 34
+      },
+      "approved": true,
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    },
+    "nychterino-deltio": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Νυχτερινό δελτίο",
+      "font_family": "Literata",
+      "font_file": "Literata[opsz,wght].ttf",
+      "font_file_note": "Lives in tools/fonts/, not tools/fonts/apospasma/ -- already licensed for this project (D1). Variable font -- opentype.js reads the default instance.",
+      "border_style": "minimalist",
+      "border_prompt": "Minimalist thin-line frame: a plain rectangular border with a row of tiny evenly spaced tick marks along the top edge only, like a broadcast test pattern, otherwise bare. Portrait orientation, 2:3 aspect ratio (1024x1536). Pure white hairline linework on a solid black background. Empty, plain black center -- nothing crossing the exact middle of the frame. No text, no letters, no numbers, no watermark, no signature. High contrast, sparse vector-like engraving style.",
+      "border_seed": null,
+      "border_seed_note": "Generated via ChatGPT's image tool (no numeric seed exposed), not Z-Image-Turbo -- HF ZeroGPU quota ran out mid-batch.",
+      "compose": {
+        "ornaments": false,
+        "labelSize": 34
+      },
+      "approved": true,
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    },
+    "i-techni-tou-tromou": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Η τέχνη του τρόμου και άλλα διηγήματα",
+      "font_family": "Gentium Book Plus",
+      "font_file": "apospasma/Gentium-Book-Plus-Regular.ttf",
+      "border_style": "minimalist",
+      "border_prompt": "Minimalist gothic thin-line frame: a plain rectangular border with one thin bare thorn-branch line accent at the top two corners only, no dense pattern, vast resting black field. Portrait orientation, 2:3 aspect ratio (1024x1536). Pure white hairline linework on a solid black background. Empty, plain black center -- nothing crossing the exact middle of the frame. No text, no letters, no numbers, no watermark, no signature. High contrast, sparse vector-like engraving style.",
+      "border_seed": null,
+      "border_seed_note": "Generated via ChatGPT's image tool (no numeric seed exposed), not Z-Image-Turbo -- HF ZeroGPU quota ran out mid-batch.",
+      "compose": {
+        "ornaments": false,
+        "titleMaxLines": 4,
+        "labelSize": 34
+      },
+      "approved": true,
+      "note": "Longest title in the set (stories collection) -- may need titleMaxLines raised or titleMinSize lowered from the default.",
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    },
+    "faust": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Φάουστ: μια τραγωδία",
+      "font_family": "Noto Serif Display",
+      "font_file": "apospasma/Noto-Serif-Display-Regular.ttf",
+      "border_style": "minimalist",
+      "border_prompt": "Minimalist thin-line frame: a plain rectangular border with one small delicate flame accent mark at each of the four corners only, restrained classical motif, vast resting black field. Portrait orientation, 2:3 aspect ratio (1024x1536). Pure white hairline linework on a solid black background. Empty, plain black center -- nothing crossing the exact middle of the frame. No text, no letters, no numbers, no watermark, no signature. High contrast, fine vector-like engraving style.",
+      "border_seed": null,
+      "border_seed_note": "Generated via ChatGPT's image tool (no numeric seed exposed), not Z-Image-Turbo -- HF ZeroGPU quota ran out mid-batch.",
+      "compose": {
+        "ornaments": false,
+        "labelSize": 34
+      },
+      "approved": true,
+      "note": "A translated stage tragedy -- Display face chosen deliberately for a touch more drama than the others, still minimalist border per the user's direction.",
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    },
+    "istories-tou-kyriou-koiner": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Ιστορίες του κυρίου Κόινερ",
+      "font_family": "JetBrains Mono",
+      "font_file": "JetBrainsMono[wght].ttf",
+      "font_file_note": "Lives in tools/fonts/, not tools/fonts/apospasma/ -- already licensed for this project (D1). Variable font.",
+      "border_style": "minimalist",
+      "border_prompt": "Extremely bare minimalist thin-line frame: a plain rectangular border with small right-angle bracket marks at each corner, like typewriter or terminal corner marks, no other ornament, vast resting black field. Portrait orientation, 2:3 aspect ratio (1024x1536). Pure white hairline linework on a solid black background. Empty, plain black center -- nothing crossing the exact middle of the frame. No text, no letters, no numbers, no watermark, no signature. High contrast, austere geometric vector-like engraving style.",
+      "border_seed": null,
+      "border_seed_note": "Generated via ChatGPT's image tool (no numeric seed exposed), not Z-Image-Turbo -- HF ZeroGPU quota ran out mid-batch.",
+      "compose": {
+        "ornaments": false,
+        "labelSize": 34
+      },
+      "approved": true,
+      "note": "Deliberate pairing, not a leftover: Brecht's Keuner parables are terse and aphoristic -- a mono/typewriter face fits that register in a way none of the literary serifs do. Confirm this reads right before treating it as settled; it's the one genuinely different register in the set.",
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    },
+    "istories-tis-allis-ochthis": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Ιστορίες της άλλης όχθης",
+      "font_family": "Tinos",
+      "font_file": "apospasma/Tinos-Regular.ttf",
+      "border_style": "minimalist",
+      "border_prompt": "Minimalist thin-line frame: a plain rectangular border with a single delicate wave-line accent along the bottom edge only, otherwise bare, vast resting black field. Portrait orientation, 2:3 aspect ratio (1024x1536). Pure white hairline linework on a solid black background. Empty, plain black center -- nothing crossing the exact middle of the frame. No text, no letters, no numbers, no watermark, no signature. High contrast, sparse vector-like engraving style.",
+      "border_seed": null,
+      "border_seed_note": "Generated via ChatGPT's image tool (no numeric seed exposed), not Z-Image-Turbo -- HF ZeroGPU quota ran out mid-batch.",
+      "compose": {
+        "ornaments": false,
+        "labelSize": 34,
+        "bottomRule": false
+      },
+      "approved": true,
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    },
+    "ola-gia-tin-anaptyxi": {
+      "label_el": "Απόσπασμα από",
+      "title_el": "Όλα για την ανάπτυξη",
+      "font_family": "STIX Two Text",
+      "font_file": "apospasma/STIX-Two-Text-Regular.ttf",
+      "border_style": "minimalist",
+      "border_prompt": "Minimalist architectural thin-line frame: a plain rectangular border with a single restrained skyline silhouette line accent along the bottom edge only, straight austere geometry, vast resting black field. Portrait orientation, 2:3 aspect ratio (1024x1536). Pure white hairline linework on a solid black background. Empty, plain black center -- nothing crossing the exact middle of the frame. No text, no letters, no numbers, no watermark, no signature. High contrast, sparse vector-like engraving style.",
+      "border_seed": null,
+      "border_seed_note": "Generated via ChatGPT's image tool (no numeric seed exposed), not Z-Image-Turbo -- HF ZeroGPU quota ran out mid-batch.",
+      "compose": {
+        "ornaments": false,
+        "labelSize": 34,
+        "bottomRule": false
+      },
+      "approved": true,
+      "approved_note": "User-approved 2026-08-06 from a full 12-tile review artifact (all 12 shown at once, tinted + composited on a transparent checkerboard, not solid mockup fills). Two rounds of feedback folded in first: label size raised 28->34px across all 12, and the composed bottom rule suppressed on istories-tis-allis-ochthis and ola-gia-tin-anaptyxi since their border art already carries its own bottom-edge motif (wave / skyline)."
+    }
+  }
+}

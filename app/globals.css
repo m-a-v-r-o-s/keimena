@@ -1,0 +1,2441 @@
+@import '../tokens.css';
+
+/* Font families resolve to next/font-generated variables set on <html>.
+ * tokens.css holds the canonical spec; these bind it to the loaded webfonts. */
+:root {
+  --font-display: var(--f-didot), Georgia, serif;
+  --font-body: var(--f-literata), Georgia, serif;
+  --font-mono: var(--f-mono), ui-monospace, monospace;
+  /* Its own family, because its @font-face is a separate, non-preloaded
+     next/font call (see app/layout.jsx). Anything set in italic must ask for
+     this one by name -- --font-body carries the upright face only, so italic
+     against it would be synthesised oblique rather than Literata's real
+     italic, and a sloped Literata is not the same letterform. */
+  --font-body-italic: var(--f-literata-italic), Georgia, serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  /* clip, never hidden -- `hidden` on the root creates a scroll container and
+   * silently breaks position: sticky further down the tree. */
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+html {
+  /* The canvas colour, which is also what overscroll reveals past either end of
+   * the document -- so it tracks the reading ground, and no mismatched strip
+   * appears when a book is opened and the room changes colour. Under the sheet
+   * below, this is seen only in overscroll; it is still the colour every
+   * contrast gate is measured against. */
+  background: var(--reading-ground, var(--color-ink-canvas));
+  -webkit-text-size-adjust: 100%;
+  transition: background-color var(--dur-slow) var(--ease-out);
+  /* The document's own scrollbar, now that a book page scrolls the document
+     itself rather than a nested `.reader` container (D23) -- this used to
+     live on `.reader`. The platform default is a white slab against this
+     ground -- brighter than the title it sits beside. Thin, and in the same
+     hairline the rest of the page rules with. Bound to the book's own faint
+     tier, not a fixed white alpha: two books open onto a LIGHT room (see
+     COLOR-REDESIGN.md), where a white-alpha thumb would be invisible rather
+     than merely dim. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--book-faint, var(--color-rule-strong)) transparent;
+}
+
+/* ---- The room's sheet ----------------------------------------------------
+ * The wall the books stand against: linen, with the odd drawn column and olive
+ * sprig set into it. It replaces a flat field of ink with a printed surface,
+ * which is the same argument the paper grain further down makes -- this one
+ * just has something to look at in it.
+ *
+ * FIXED, so it does not travel. The reader scrolls past twenty-six books; the
+ * room they are in holds still, and the sheet is part of the room. It is also
+ * why this is a layer rather than a background on the document: a fixed
+ * background ATTACHMENT repaints the whole viewport on every scroll frame, on
+ * a page already running WebGL, and is the one thing iOS Safari reliably gets
+ * wrong. A fixed layer is composited once and then left alone.
+ *
+ * REPEATED at a fixed tile, never stretched -- see --ground-tile.
+ *
+ * z-index -2 puts it behind the canvas (0) and the page (.shell, 2), and above
+ * the document's own background. It has to live on html rather than inside
+ * .shell: .shell is a stacking context, so nothing in it can get behind the
+ * canvas, which is .shell's sibling. That is the same wall the book-page
+ * takeover ran into further down.
+ */
+html::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  /* EXPERIMENTAL SWAP, for a live look only -- not final, not run through
+     tools/covers.mjs's texture pipeline yet. newbg.webp (the 17-book-colour
+     composite) doesn't tile: tested by compositing it into the site's real
+     512x512 --ground-tile grid, and it shows hard seams plus an aspect-ratio
+     squash. Shown once instead, sized to cover, no repeat -- sidesteps the
+     seam problem entirely since a single fixed full-bleed layer never meets
+     its own edge. Revert to the original two lines (still below, commented)
+     if this isn't the direction. */
+  background-image: url('/textures/newbg-test.webp');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  /* background-image: url('/textures/background.webp');
+  background-repeat: repeat;
+  background-size: var(--ground-tile) var(--ground-tile); */
+}
+
+/* The book's own room, washed over the sheet.
+ *
+ * --reading-ground is set on the document while a book is open or held: a dark
+ * tint of that book's complement, so the cover sits forward off it. A book that
+ * owns the room owns it completely -- its colour covers the sheet rather than
+ * competing with it -- so this is painted ABOVE, and left transparent the rest
+ * of the time. Still behind the canvas, which is what the ground has always
+ * needed to be.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--reading-ground, transparent);
+  /* Deliberately slower than the book's own arrival -- .slot's ~0.72s
+     transform below, and the WebGL volume's own opacity fade-in (see
+     BookVolume.jsx's RETURN_EASE), which settles by ~0.86s -- so the cover
+     is visibly the first thing to land: it reads as settled while the room
+     is still finishing its recolour, rather than both finishing at once. */
+  transition: background-color 1.2s var(--ease-out);
+}
+
+body {
+  /* No background of its own. An in-flow background paints ABOVE negative
+     z-index layers, so painting the ground here would bury the sheet. html
+     carries the colour, body::before carries the book's. */
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-body);
+  line-height: var(--leading-body);
+  font-variation-settings: 'opsz' var(--opsz-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- Paper grain ---------------------------------------------------------
+ * A fixed, non-interactive film grain. This is what keeps a large field of
+ * flat ink from looking like a screen fill rather than a printed surface.
+ * Fixed and pointer-events:none so it never repaints with scrolling content.
+ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after {
+    opacity: 0.02;
+  }
+}
+
+/* ---- Type primitives ---------------------------------------------------- */
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  /* GFS Didot ships weight 400 only, no italic. Requesting bold here makes the
+   * browser synthesise it and smear the Didone hairlines. See DESIGN.md 3. */
+  font-weight: var(--weight-display);
+  font-style: normal;
+  margin: 0;
+  text-wrap: balance;
+  /* Greek diacritics need vertical air so the tonos never collides with the
+   * descender on the line above. */
+  line-height: var(--leading-head);
+  /* Long unbroken Greek compounds must never force a horizontal scrollbar. */
+  overflow-wrap: anywhere;
+  min-width: 0;
+  /* Keeps a heading clear of the sticky nav when scrolled to via an anchor or
+   * scrollIntoView, instead of tucking underneath it. */
+  scroll-margin-top: calc(56px + var(--space-lg));
+}
+
+p {
+  margin: 0 0 var(--space-md);
+  max-width: var(--measure-read);
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--color-rule-strong);
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+/* The focus ring must appear instantly -- never animate its arrival. */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-ui);
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-ink-canvas);
+}
+
+/* ---- Layout ------------------------------------------------------------- */
+
+.shell {
+  width: 100%;
+  max-width: var(--measure-wide);
+  margin-inline: auto;
+  overflow-x: clip;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--measure-page);
+  margin-inline: auto;
+  padding-inline: var(--page-margin);
+}
+
+.section {
+  padding-block: var(--space-section);
+}
+
+@media (max-width: 767px) {
+  .section {
+    padding-block: var(--space-section-mobile);
+  }
+}
+
+.rule {
+  border: 0;
+  border-top: var(--rule-hairline) solid var(--color-rule);
+  margin: 0;
+}
+
+/* ---- Metadata ------------------------------------------------------------
+ * Tracked-out mono. Latin numerals and Latin-safe labels only -- Greek is
+ * never letter-spaced into all-caps here. */
+.meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-meta);
+  color: var(--color-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-lg);
+  align-items: baseline;
+}
+
+/* Below ~700px the wordmark, three links and the locale toggle cannot share a
+ * row. Because the root uses overflow-x: clip, an overflowing nav does not get
+ * a scrollbar -- it silently clips, putting real navigation out of reach. So
+ * the bar wraps to two rows instead: wordmark, then links and locale beneath.
+ */
+
+/* ---- Series page ---------------------------------------------------------
+ * Book accents are suppressed here: 27 colours in one viewport is a swatch
+ * library, not a shelf. DESIGN.md section 2. */
+
+/* ---- Footer --------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- WebGL book layer ----------------------------------------------------
+ * One fixed canvas for every book on the page (DECISIONS.md D7). It sits
+ * behind the content and in front of the ground; the paper grain above it
+ * unifies the objects with the room, while the type stays above the grain and
+ * therefore stays crisp.
+ *
+ * pointer-events: none is load-bearing, not tidiness -- it is what keeps the
+ * real link underneath clickable and focusable. Nothing here may ever become
+ * the interactive surface.
+ */
+.bookcanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+.bookcanvas[data-ready] {
+  opacity: 1;
+}
+
+.shell {
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- Book slot -----------------------------------------------------------
+ * The DOM box the canvas measures and paints over. It keeps the v1 CSS book
+ * inside it as the no-WebGL layer: if the canvas never starts, this is what
+ * ships, unchanged and already accessible.
+ */
+.slot {
+  display: inline-block;
+  position: relative;
+  touch-action: pan-y; /* vertical drags stay the page's, always */
+}
+
+/* Once the canvas is live the CSS book is redundant ink on top of the volume.
+ * It fades out rather than being removed: it must stay in the accessibility
+ * tree, stay focusable, and stay crawlable. */
+
+/* A keyboard user has to be able to see what they have focused, so the object
+ * comes back for as long as focus is inside it.
+ *
+ * :focus-visible, not :focus-within -- pressing a book to drag it also focuses
+ * its link, and a plain :focus-within rule brings the flat fallback back up
+ * over the volume for the whole gesture and leaves it there afterwards. */
+
+.webgl-on.is-dragging,
+.webgl-on.is-dragging .slot {
+  cursor: grabbing;
+}
+
+/* The drag must not paint the page blue mid-gesture. */
+.is-dragging {
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bookcanvas {
+    transition: none;
+  }
+}
+
+/* ---- The stack -----------------------------------------------------------
+ * The backlist is one continuous pile: slabs lying flat, seen at a raking
+ * angle, with ZERO gap between rows. The perspective alone separates them, and
+ * each book slightly occludes the one behind it -- which is what a stack of
+ * books actually does and what the reference's own geometry measures out to
+ * (DECISIONS.md D9).
+ *
+ * The row box is what the canvas measures, so its width sizes the book: for a
+ * book lying flat, the head-to-foot dimension runs across the screen.
+ */
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-block: var(--space-2xl);
+  /* One empty row before the first book -- the space a book would take, with no
+     book in it. A pile is not a list: it wants somewhere to have come from, and
+     starting hard against the first spine reads as a page cut off at the top
+     rather than as a stack seen from above. Padding rather than a real slot,
+     because the canvas measures [data-book-slot] elements and a phantom one
+     would be a phantom volume. */
+  padding-block-start: var(--slot-h);
+}
+
+/* ---- Spine bar -----------------------------------------------------------
+ * The no-WebGL form of a stacked book, carrying the same three fields the 3D
+ * spine texture does. Not a degraded cover -- a different, complete object.
+ */
+.spinebar {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+  align-items: center;
+  gap: var(--space-md);
+  height: 100%;
+  padding-inline: var(--space-lg);
+  background: color-mix(in oklab, var(--color-ink-raised) 86%, black);
+  border-radius: var(--radius-book);
+  border-top: 1px solid color-mix(in oklab, var(--color-text) 12%, transparent);
+  box-shadow: var(--shadow-book);
+  text-decoration: none;
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+.spinebar__author {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.spinebar__title {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.6vw, 1.5rem);
+  letter-spacing: var(--track-head);
+  line-height: 1.2;
+  text-align: center;
+  /* Greek runs long; the longest title in the catalogue has to survive this
+     row without pushing the imprint off the end. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spinebar__imprint {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-meta);
+  opacity: 0.66;
+  white-space: nowrap;
+}
+
+/* Under WebGL the bar is replaced by the volume, but stays in the a11y tree
+ * and focusable -- same contract as the upright fallback. */
+
+/* Mobile: full-bleed and taller, where the shallower rake puts the cover art
+ * rather than the spine in charge. DESIGN.md section 5. */
+@media (max-width: 767px) {
+  .slot--stacked {
+    width: 100vw;
+    max-width: 100vw;
+    height: clamp(150px, 46vw, 272px);
+    margin-inline: calc(50% - 50vw);
+  }
+
+  .stack {
+    margin-block: var(--space-xl);
+  }
+}
+
+/* ==========================================================================
+   ONE PAGE: the stack, the rail, and the reading view
+   ========================================================================== */
+
+/* Standing below the stack, not above it. The stack already ends in half a
+   viewport of clear space so its last book can reach the reading zone, so the
+   top padding here only has to separate the text from that -- it does not have
+   to open the page. The bottom padding hands off to the footer. */
+.intro {
+  padding-block: clamp(1.5rem, 5vh, 3rem) clamp(4rem, 12vh, 8rem);
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+/* Handling a book clears the page for it. The rest of the stack already fades
+   back; the standing text has to go with it, or the reader is turning an object
+   over in front of a paragraph that is still talking. */
+.is-dragging .intro {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.intro__title {
+  font-size: var(--text-display-s);
+  letter-spacing: var(--track-display);
+  line-height: var(--leading-display);
+}
+
+/* ---- The author's poster -------------------------------------------------
+ *
+ * A real, photographed sheet -- the publisher's bio, printed and folded into
+ * four -- that opens as the reader scrolls it up the page. See
+ * components/AuthorPoster.jsx for why this is hinged geometry rather than a
+ * rendered frame sequence, why every panel carries a whole copy of the sheet,
+ * and where the three creases (FOLDS) actually are.
+ *
+ * The whole animation is one custom property. `--fold` runs 1 (folded) to 0
+ * (flat), written by the component from the sheet's own position, and every
+ * rule below is a multiple of it. Nothing here has a duration or a keyframe:
+ * the reader's scroll IS the timeline, so there is no state to fall out of sync
+ * and nothing keeps moving after they stop.
+ *
+ * IT IS PRINTED ON PAPER, which is the one place this site's palette inverts.
+ * See --color-paper in tokens.css: everything on this sheet takes ink, and
+ * --color-text on it is 1.19:1 and invisible. A light object in a dark room is
+ * also what makes the fold legible at all -- shadow reads on cream, and on
+ * near-black it had nowhere to go.
+ */
+.poster {
+  --fold: 0;
+  /* Flat until AuthorPoster.jsx's cursor effect takes over client-side, so the
+     server-rendered sheet isn't leaning before hydration has a mouse position
+     to lean toward. --tilt is the left/right lean (rotateY); --tilt-y is
+     up/down (folded into the fold's own rotateX -- see .poster__sheet). */
+  --tilt: 0deg;
+  --tilt-y: 0deg;
+  /* Written for six equal panels, when short glass was needed to make each
+     crease turn visibly. At four unequal panels a short distance instead
+     over-foreshortens each facet, and the panels step in width sharply
+     enough at every crease that the sheet's own edge zigzags rather than
+     reading as one continuous folded silhouette. Backed off until that
+     stepping reads as a taper, not a break -- confirmed against a side by
+     side at 1800px (the old value) and 2200px before landing here. */
+  perspective: 2800px;
+  /* Centred, not 30% high. The 30% offset was chosen to match a taller
+     six-panel sheet's own visual weight; centring it is what keeps the
+     current four-panel sheet's taper symmetric top to bottom instead of
+     leaning harder into the lower panels. */
+  perspective-origin: 50% 50%;
+}
+
+.poster__sheet {
+  /* A size container on its own inline axis, so --poster-h below can be
+     expressed as a fraction of this element's OWN rendered width instead of
+     a fixed rem. Below the old 767px cutoff this box is narrower than its
+     46rem cap; without this, --poster-h stayed fixed at 66rem regardless,
+     and the panels (sized off it) stretched the one photograph across a
+     box whose width had shrunk but whose height hadn't, foreshortening the
+     bio's own handwriting into an oval nothing on the real sheet looks
+     like. cqw ties height to width at every size instead. */
+  container-type: inline-size;
+  /* The sheet's printed height, tied to this element's own width rather
+     than fixed: 66rem was tuned at the width this box takes once it hits
+     its 46rem cap (see max-width below), so 66/46 reproduces that exact
+     figure there and scales the rest of the way down. See FOLDS in
+     AuthorPoster.jsx for what the panel bands below do with it. */
+  --poster-h: calc(100cqw * 66 / 46);
+  transform-style: preserve-3d;
+  /* backface-visibility, on every 3D-transformed layer in this stack (here,
+     the hinges, and the panels below): nested preserve-3d planes rotating
+     against a near-black page can show a hairline of that page through their
+     own edge at some angles if the browser considers a face's back briefly
+     toward the camera mid-rotation. Costs nothing to set defensively. */
+  backface-visibility: hidden;
+  /* The sheet tips toward the reader as it folds, which is what puts the
+     concertina in perspective instead of showing it edge-on and flat.
+     Negative: reversed from tipping away, so the fold comes up at the reader
+     rather than receding from them. --tilt-y (the cursor's up/down lean) is
+     ADDED into this same rotateX rather than given its own rotateX() -- two
+     rotations about one axis commute, so summing them here is identical to
+     applying them in sequence, without a second transform function.
+
+     rotateY(--tilt) is the cursor's left/right lean, on its own axis -- see
+     AuthorPoster.jsx -- so it composes with the fold instead of fighting it:
+     the sheet can lean right while folding shut just as easily as while
+     lying open. */
+  transform: rotateX(calc(var(--fold) * -58deg + var(--tilt-y))) rotateY(var(--tilt));
+  /* CENTRE, not the top edge. Pivoting on the top swung the foot of a 1056px
+     sheet nearly 900px toward a camera 1150px away, and the lower panels
+     ballooned -- the fold was right and the lens was wrong. About the middle
+     the sheet leans instead of lunging: the near edge gains a quarter and the
+     far edge loses a sixth, which is what a poster on a table looks like. */
+  transform-origin: center;
+  max-width: 46rem;
+  margin-inline: auto;
+  /* A soft, wide, low shadow -- not paper-realistic (a folded sheet this
+     size wouldn't cast one this big), but a rotated rectangle's silhouette
+     against near-black otherwise reads as a razor-cut edge, worse wherever
+     the tilt happens to foreshorten it most. The blur eases that line into
+     the page instead of trying to anti-alias it away.
+
+     box-shadow, not filter: drop-shadow. The two look almost identical here,
+     but drop-shadow rasterises this element's entire preserve-3d subtree to a
+     flat bitmap before drawing the shadow, and flattening four independently
+     rotated, hinge-nested panels into one bitmap is what was opening a visible
+     seam at the most deeply nested crease (fold 3, three hinges deep) even
+     though their layout boxes are pixel-exact and touching. box-shadow paints
+     on this element's own box and rides along with its transform instead,
+     so the panels beneath are never flattened together. */
+  box-shadow: 0 2rem 3rem rgb(0 0 0 / 0.45);
+}
+
+.poster__hinge {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  /* NO background here, unlike .poster__panel. A hinge wraps the NEXT panel
+     down -- its box height is the unrotated sum of everything nested inside
+     it, not one folded facet -- so an opaque plane on it sits in front of
+     the rotated panels beneath rather than behind them, hiding whatever
+     nesting is deeper than the first hinge. (Tried it, as a seam backstop:
+     it occluded the bio past the first crease.) */
+  /* Each crease turns about its own top edge, and the hinges NEST -- so panel
+     four's angle is measured from panel three rather than from the page,
+     exactly as the folds of real paper compound. */
+  transform-origin: top center;
+}
+
+/* Alternating signs: back, then forward. A concertina, not a roll.
+ *
+ * 58deg (was 42, exaggerated for a more folded starting position), and the
+ * number is the whole difference between a fold and a crease. It was 86 once:
+ * nearly square, which sounds like a harder fold and is in fact no fold at
+ * all -- at 86deg every second panel is edge-on and six per cent of its own
+ * height, so it disappears, and what is left is three flat panels stepping
+ * back. A concertina is only legible when BOTH facings are in view at once,
+ * so 58 is as far as this can push toward square before it starts losing the
+ * same panels 86 did. */
+.poster__hinge--back {
+  transform: rotateX(calc(var(--fold) * 58deg));
+}
+
+.poster__hinge--fwd {
+  transform: rotateX(calc(var(--fold) * -58deg));
+}
+
+/* A panel is a window onto the sheet, not a piece of it. Each one clips a
+   full-height copy of the poster to its own band -- the fractions in
+   --band-start/--band-end (set in AuthorPoster.jsx from FOLDS) -- so the bands
+   reassemble into one continuous printed page at the exact three creases the
+   real sheet has. */
+.poster__panel {
+  position: relative;
+  /* Its own stacking context, so the sheet's layers and the facet's light below
+     stay in the order they are written and cannot be reordered by anything
+     outside the panel. */
+  z-index: 0;
+  /* +1px painted past this band, pulled straight back off the layout box by an
+     equal negative margin. The panel therefore covers the hairline where it meets
+     the next facet WITHOUT moving the crease -- the next hinge is positioned from
+     the margin box, which is unchanged. The extra row is real paper: the face is a
+     full-height copy clipped by overflow:hidden, so 1px more reveals the next
+     band's first row, correctly registered.
+     Adjacent 3D planes each antialias their shared edge and two partial-coverage
+     edges over the near-black page composite to a dark line -- worst on the side
+     rotated away from the viewer, which is why it tracked the cursor.
+     Measured: removes the seam at all three creases at fold 0.16 and 0.45, at tilt
+     -4/0/+4. 2px is NOT better -- it slightly disturbs the printed crease instead. */
+  height: calc((var(--band-end) - var(--band-start)) * var(--poster-h) + 1px);
+  margin-bottom: -1px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  /* A backstop, not a visible surface: .poster__face's background image
+     covers this panel's whole window under normal rounding, so this colour
+     never shows. It matters only if a sub-pixel gap opens between the two
+     under the compounded rotation above -- paper showing through a hairline
+     gap disappears into the sheet; the page's near-black behind it would
+     have read as a thin dark line running along the fold. */
+  background: var(--color-paper);
+
+  /* How the light falls on THIS facet. --facet is 0 for panels facing the
+     reader and 1 for panels turned away (set in AuthorPoster.jsx, because CSS
+     cannot take --i modulo 2).
+     The two are deliberately inverted against each other: a panel that is dark
+     at its top meets a panel that is light at its bottom, so every crease is a
+     step in tone as well as a step in geometry. That contrast at the fold line
+     is what the eye actually reads as corrugation. */
+  --lit-top: calc(var(--fold) * (0.03 + var(--facet) * 0.29));
+  --lit-bottom: calc(var(--fold) * (0.30 - var(--facet) * 0.25));
+}
+
+.poster__face {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--band-start) * var(--poster-h) * -1);
+  height: var(--poster-h);
+
+  /* The whole sheet, ONE photograph -- stock, foxing, the bio's own
+     handset type, and the three creases it actually has. STRETCHED to
+     border-box so a crease measured at 0.5037 of the file (FOLDS in
+     AuthorPoster.jsx) lands at 0.5037 of the sheet at every size, which is
+     what keeps the printed fold in register with the panel that bends there. */
+  background: var(--color-paper) url('/textures/paper.webp') center / 100% 100% no-repeat;
+}
+
+/* The light on the facet.
+ *
+ * It is on the panel, not on the face, so it lies above everything the sheet
+ * carries -- the stock and the plate. A fold darkens the paper's own printed
+ * words exactly as much as it darkens the stock they sit on, because a
+ * photograph of a folded page already has them on the same surface; this only
+ * has to add what an unfolded flat photo cannot: shading that moves with
+ * --fold as the reader scrolls. */
+.poster__panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background-image: linear-gradient(
+    to bottom,
+    rgb(24 16 8 / var(--lit-top)),
+    rgb(24 16 8 / var(--lit-bottom))
+  );
+}
+
+/* The printed picture, sized and margined to land inside the blank band the
+   photograph reserves above its first crease (FOLDS[0] in AuthorPoster.jsx)
+   -- it has to fit there whole, since anything spilling past the crease would
+   be clipped by one panel and reappear, wrongly, in the next (see the note on
+   AuthorPoster.jsx's PANELS). */
+.poster__plate {
+  position: relative;
+  z-index: 1;
+  width: clamp(150px, 20vw, 200px);
+  aspect-ratio: 1;
+  margin: calc(clamp(0.75rem, 2vh, 1rem) + 50px) auto 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* Printed, not pasted on: a monochrome plate on warm stock picks up the
+     paper's own colour, and its blacks never get darker than the ink beside
+     them. */
+  filter: sepia(0.22) contrast(0.94) brightness(1.02);
+  /* The plate's own foot fades toward the crease just below it, so the fold
+     shows through the photo instead of the photo stopping dead at a hard
+     rectangle -- a print on a folded page creases with the page. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, rgb(0 0 0 / 0.55) 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 70%, rgb(0 0 0 / 0.55) 100%);
+}
+
+/* The one real copy. Hidden from sight while the folded sheet is on show, but
+   never from the accessibility tree -- this is the copy that is announced, and
+   the panels above are all aria-hidden. */
+.poster__flat {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.catalogue {
+  position: relative;
+}
+
+/* ---- Rail ----------------------------------------------------------------
+ * A position indicator, not navigation chrome: one tick per book, the current
+ * one lit. It says where in the catalogue you are, and lets you jump. The back
+ * control lives at its head, so returning from a book is always in the same
+ * place the rail already trained the eye to look.
+ */
+.rail {
+  position: fixed;
+  /* Inset, not hard against the true edge -- a readout that touches the
+     glass reads as UI chrome bleeding off the page; a small clearance reads
+     as placed. */
+  left: var(--space-lg);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  /* Set live, mobile only, by Rail.jsx as the footer's own black ground
+     climbs up toward the rail's fixed mid-height -- see the scroll effect
+     there. Unset (the 1 default) everywhere else, so nothing here changes
+     for desktop or before that effect's first measurement. */
+  opacity: var(--rail-fade, 1);
+  /* A COLUMN: the back control sits above the readout, not beside it -- it
+     is always present (see .rail__back's [aria-hidden] below, and the JSX --
+     it is never actually removed from layout), so stacking it on top means
+     the ticks have a fixed, permanent place to sit under it rather than
+     shifting up and down every time reading opens or closes. */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.rail__ticks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  /* Fixed, and never touched by any hover/current rule below -- the spacing
+     between lines has to read as exactly constant regardless of state, or
+     the readout itself would look like it was shifting underfoot. A little
+     more room than the lines are thick, now that they're thick. */
+  gap: 6px;
+  align-items: flex-start;
+  /* Extends this list's own hoverable box well past the ticks themselves,
+     out to where a hovered tick's title actually renders (see
+     .rail__activeTitle) -- invisible, but still part of the box mousemove
+     below is tracked against. Without it, sliding the cursor up or down
+     while over the title text (which sits outside the 26px-wide ticks)
+     would leave this element's box entirely and drop the hover instead of
+     moving on to whichever book is now alongside the cursor. */
+  padding-right: 280px;
+}
+
+/* Continuous position tracking, not per-item enter/leave: every tick is
+ * exactly `rect.height / books.length` apart (the `gap` above is fixed and
+ * accounted for automatically, since it is part of the measured rect), so
+ * one mousemove handler on the whole list can always tell which book the
+ * cursor is nearest -- including while it's over a title well outside any
+ * single tick's own narrow box (see the padding-right above), and with no
+ * seam between adjacent ticks for the cursor to fall through. Per-item
+ * mouseenter/mouseleave could not give either guarantee: each tick's own
+ * hoverable box necessarily stops at its own edge.
+ */
+.rail__tickItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* Locked to the tick's own height and never touched by hover -- the title
+     below is taken clean out of flow (position: absolute) specifically so
+     it can never grow this box. If it did, this item would sit taller than
+     its neighbours the instant a title appeared, throwing off the gaps
+     around it, and the list's total height would change too, which -- since
+     .rail is centered by its own height (top: 50%, translateY(-50%)) --
+     would recentre the whole rail and visibly shove the back arrow above it
+     every time a hover started or ended. */
+  height: 12px;
+}
+
+.rail__tick {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* A 3px tick is not a tap target. The control is 24px tall and transparent;
+     only the line inside it is drawn. */
+  height: 12px;
+  width: 28px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* Drawn at full length and scaled down, so the tick grows by transform rather
+ * than by animating width -- a width transition relayouts the whole rail on
+ * every frame of every hover. Thick: this is a readout meant to be read at a
+ * glance, not a decorative hairline. */
+.rail__tickLine {
+  display: block;
+  /* Thickness (height) never changes between states -- only length
+     (transform) and opacity do, in both the aria-current rule directly
+     below and the hover taper further down. A line that got THICKER as
+     well as longer would read as a second, competing signal instead of one
+     continuous readout. */
+  height: 5px;
+  width: 26px;
+  transform: scaleX(0.78);
+  transform-origin: left center;
+  /* Same reasoning as .rail__back below: the ticks stay up through reading
+     too, where two books' rooms run LIGHT (see COLOR-REDESIGN.md) -- a
+     fixed cream line would all but disappear there. */
+  background: var(--book-text, var(--color-text));
+  opacity: 0.3;
+  transition: transform var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+
+/* The current book reads as brighter than the rest of the readout at rest,
+   not longer -- length is reserved for the hover curve below. This rule
+   only governs rest: the instant ANY tick is hovered, tickStyle in
+   Catalogue.jsx writes an inline opacity for every tick (not just the
+   hovered one), inline winning the cascade outright, so this becomes
+   irrelevant until the hover ends and every inline style disappears again. */
+.rail__tick[aria-current='true'] .rail__tickLine {
+  opacity: 1;
+}
+
+/* The hover curve itself -- length and brightness are computed separately
+ * in tickStyle (Catalogue.jsx) and both set as literal inline style (not a
+ * CSS custom property CSS would have to referee against
+ * .rail__tick[aria-current] above): inline always wins the cascade
+ * outright, so hovering simply overrides every tick's resting rule at
+ * once with no specificity contest to referee.
+ *
+ * Length eases from the hovered tick's own 2.8x peak down to a 0.2 floor
+ * by smoothstep of each tick's distance from the hover -- current included,
+ * on the same curve as everything else -- so the whole rail reads as one
+ * continuous curved silhouette, not a straight ramp meeting a point.
+ * Brightness is the separate, binary half: only the hovered tick and the
+ * current tick reach full opacity; every other tick stays dark no matter
+ * how long the curve has made it. Both are absent entirely at rest, when
+ * the rule above is what makes the current tick read brighter.
+ */
+
+/* A MARK, not a button.
+ *
+ * It was a filled disc with a border -- the heaviest object on the page sitting
+ * beside the lightest, a column of hairlines. Now it is drawn the way the ticks
+ * are: one hairline stroke of --color-text, resting at the same 0.3 they rest
+ * at and coming up to full on hover. The 44px box stays and turns transparent,
+ * because a tap target is a size, not a shape.
+ */
+.rail__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  /* The 20px glyph is centred in a 44px box (a 12px inset each side), but
+     the ticks below it start flush with THEIR OWN left edge -- so a
+     centred icon reading exactly at that same left edge would need a -12px
+     shift; a few px further than that reads better than dead-on alignment,
+     by request. Shifted on the box itself, not the icon, so the tap target
+     stays the full 44px regardless of where its glyph sits inside it. */
+  margin-left: -12px;
+  /* Stays over the reading ground throughout, which two books set LIGHT (see
+     COLOR-REDESIGN.md). A fixed cream icon at 0.3 opacity would all but
+     disappear there -- same reason .rail__tickLine above carries the same
+     variable now that the ticks stay up through reading too. */
+  color: var(--book-text, var(--color-text));
+  opacity: 0.3;
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.rail__back:hover,
+.rail__back:focus-visible {
+  opacity: 1;
+}
+
+/* Always in the layout (see the JSX comment), invisible when reading is off
+   rather than removed -- the ticks below never have to shift to make room
+   for it appearing or leave a gap behind it disappearing. */
+.rail__back[aria-hidden='true'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rail__back svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* The hovered tick's title, in real visible text -- not the old HTML
+ * `title=""` tooltip, and not shown for any other reason: it exists for
+ * exactly as long as that one tick is hovered, then it's gone, same as the
+ * taper above. Positioned absolute within .rail__tickItem (which is its
+ * `position: relative` anchor -- see that rule above) rather than laid out
+ * as a normal-flow sibling: the font is taller than the 12px tick row, so in
+ * flow it would stretch whichever item is currently hovered taller than its
+ * neighbours -- unbalancing the gaps around it and growing the list's total
+ * height, which recentres the whole rail (see .rail__tickItem's comment).
+ * Taking it out of flow means it can appear and disappear with zero effect
+ * on any box's size. It still sits inside .rail__ticks's own hoverable
+ * padding-right (see that rule), so the mousemove tracker there still
+ * covers it. pointer-events: none anyway, as a defensive backstop: the
+ * title is decorative, the button is the real target, and this keeps it
+ * from ever intercepting a click meant for it.
+ */
+.rail__activeTitle {
+  position: absolute;
+  /* The tick button's own width, then a wide clearance -- the hovered
+     line's ceiling reaches 2.8x its drawn width (see tickStyle in
+     Catalogue.jsx, peak 2.8 against 26px drawn width), and this leaves room
+     for that without the two ever touching. */
+  left: calc(28px + var(--space-2xl));
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  color: var(--book-text, var(--color-text));
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+}
+
+/* ---- Slot ---------------------------------------------------------------- */
+
+.slot {
+  display: block;
+  position: relative;
+  width: clamp(384px, 62vw, 864px);
+  height: var(--slot-h);
+  margin: 0 auto;
+  touch-action: pan-y; /* vertical drags stay the page's, always */
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.slot__hit {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  height: 100%;
+  padding-inline: var(--space-lg);
+  font: inherit;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.webgl-on .slot__hit {
+  cursor: grab;
+}
+
+.webgl-on.is-dragging .slot__hit {
+  cursor: grabbing;
+}
+
+/* Books other than the one being read stop taking the pointer, so a stray
+   click cannot land on a book the reader can barely see. */
+.slot[data-dim] {
+  pointer-events: none;
+}
+
+/* ---- Reading view --------------------------------------------------------
+ * A book page (app/books/[id]/page.jsx) is the reading document, full stop
+ * -- there is no shelf underneath it to hold still for, so nothing here is a
+ * fixed overlay any more (D23 corrects D11 on this point; see DECISIONS.md).
+ * `.readerRow` sections sit in normal document flow, one per book in
+ * catalogue order, and the reader scrolls the page itself: wheel, trackpad,
+ * touch, the scrollbar, the keyboard, native scroll restoration and
+ * find-in-page all just work, because this is now an ordinary document
+ * rather than a scroll container inside one.
+ */
+
+/* One book per row, full width, at least one screen tall -- even a short
+ * synopsis gives the sticky cover below room to actually BE sticky, and
+ * reads as one screen's worth of "this book's turn" rather than a cramped
+ * strip. A long synopsis (some run past 1200 characters) simply grows the
+ * row; nothing here caps it or gives it a scrollbar of its own.
+ */
+.readerRow {
+  display: grid;
+  grid-template-columns: 46fr 54fr;
+  align-items: start;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  min-height: 100vh;
+  padding: clamp(4rem, 10vh, 7rem) var(--page-margin) clamp(2rem, 6vh, 4rem);
+  padding-left: clamp(4rem, 8vw, 9rem);
+}
+
+/* Visible daylight between one book's turn and the next -- beyond each row's
+   own top/bottom padding above, which alone left consecutive books' text
+   and covers reading as one unbroken column rather than a sequence of
+   distinct turns. Only BETWEEN rows, not before the first or after the
+   last, so the reader isn't paying that space twice at either end of the
+   whole document. */
+.readerRow + .readerRow {
+  margin-top: clamp(6rem, 14vh, 12rem);
+}
+
+/* A little extra air before the footer's own --foot-seam takes over, so the
+   last book's turn doesn't run straight into the closing plate the way an
+   ordinary mid-document gap would. Only the last row -- .readerRow only
+   appears on a book page, never the catalogue, so this can't touch the
+   shelf's own footer spacing. */
+.readerRow:last-of-type {
+  padding-bottom: clamp(4rem, 10vh, 7rem);
+}
+
+/* The words move; the book does not.
+ *
+ * A book that has been opened is being LOOKED at, so it holds its position
+ * while its own row's description scrolls past beside it -- without a
+ * nested scroll container: `position: sticky` releases naturally once this
+ * row's bottom clears the viewport, and the next row's own sticky cover
+ * simply takes over, painted later in DOM order. getBoundingClientRect --
+ * what the canvas measures, live, every frame -- already reports a sticky
+ * element's actual current position, stuck or not, so nothing else here has
+ * to know or care that this is sticky rather than static.
+ *
+ * `position: sticky` lives HERE, on the wrapper -- not on `.readerRow__stage`
+ * below -- because it has to carry the colophon (.detail__edition) along
+ * with it. Sticky only pins the element it's applied to; it says nothing
+ * about a normal-flow SIBLING after it. Putting sticky on the stage alone,
+ * with the colophon as a later sibling in the same box, was tried first and
+ * was wrong: the stage stayed pinned at a fixed viewport position while the
+ * colophon -- ordinary flow, no sticky of its own -- kept scrolling upward
+ * underneath it at the normal 1:1 rate, so the two drifted apart and the
+ * book ended up rendered on top of its own colophon mid-scroll. Making the
+ * WHOLE wrapper the sticky element means the stage marker and the colophon
+ * are both just ordinary children inside it -- there is nothing for either
+ * to drift relative to, because they move as one rigid unit or not at all.
+ * `order` puts this first visually though it's second in the DOM (ReaderRow.jsx
+ * explains why); grid-item sticky is still contained by the full grid area
+ * (this row's height, set by the text column), so the pair stays pinned for
+ * as long as the original single-stage design did.
+ */
+.readerRow__stageWrap {
+  order: 1;
+  position: sticky;
+  top: clamp(4rem, 10vh, 7rem);
+}
+
+.readerRow__stage {
+  height: min(62vh, 520px);
+  width: 100%;
+  /* Matched to .readerRow__stageWrap's own sticky `top` -- this is the
+     element Reader.jsx's rail jump calls scrollIntoView on. Without it,
+     `block: 'start'` aligns the stage's edge flush with the viewport's own
+     top, which is exactly where the fixed nav sits (z-index above the
+     canvas): the book's top ends up rendered behind the nav bar, not
+     off-screen, needing a small manual scroll to reveal it. scroll-margin
+     reserves that space so the browser lands the same offset natural
+     loading a book page already rests at. */
+  scroll-margin-top: clamp(4rem, 10vh, 7rem);
+}
+
+.readerRow__text {
+  order: 2;
+  max-width: 46ch;
+  /* --leading-body (1.75) is tuned for the wide 65ch default measure; at this
+     column's 46ch it fragments the synopsis into a list of lines. See
+     --leading-narrow in tokens.css. */
+  line-height: var(--leading-narrow);
+  /* One weight step up from the site's 400 default. Compensates for the
+     per-book text tiers below, which trade the old flat 15.27:1 for contrast
+     as low as 7:1 -- see --weight-body-md in tokens.css. Costs nothing:
+     Literata is a variable font already on the page. */
+  font-weight: var(--weight-body-md);
+}
+
+.detail__eyebrow {
+  color: var(--book-muted, var(--color-text-muted));
+}
+
+.detail__title {
+  margin-top: var(--space-sm);
+  font-size: var(--text-2xl);
+  letter-spacing: var(--track-head);
+  /* Same tier as .detail__desc below, by request: the title read as a
+     different (stronger) colour than the prose beside it when it carried
+     --book-text, and the panel is meant to read as one block of text, not a
+     headline over a caption. */
+  color: var(--book-muted, var(--color-text-muted));
+}
+
+.detail__desc {
+  margin-top: var(--space-lg);
+  color: var(--book-muted, var(--color-text-muted));
+}
+
+/* ---- Press & interviews ---------------------------------------------------
+ * Interviews, press coverage and the excerpt, sourced from the publisher's
+ * own product page and verified live (tools/press.mjs) -- dead links are
+ * kept as evidence in content/press.json but never reach this markup. See
+ * DECISIONS.md D24.
+ *
+ * Placed directly under the synopsis, not beside the object: this is more
+ * of the same kind of reading the synopsis is, not apparatus describing the
+ * object the way the colophon below it is. So it stays plain prose-in-a-list
+ * rather than the colophon's bordered fact-table -- the only borders here
+ * are the hairline separators between items, in the same light-alpha
+ * language as .btn--buy and .detail__edition.
+ */
+.pressLinks {
+  margin-top: var(--space-xl);
+}
+
+.pressLinks__group + .pressLinks__group {
+  margin-top: var(--space-lg);
+}
+
+/* Mono/tracked like .meta, not the display face -- these are captions
+   naming a medium, not headlines. Never text-transform: uppercase on Greek
+   here (see .meta above): the labels are already properly cased.
+   --book-muted, not --book-faint: this text sits at --text-xs, below the
+   size WCAG's large-text exemption needs, so it has to clear the 4.5:1
+   body floor -- --book-faint is the 3:1 UI tier (borders, rules), not text. */
+.pressLinks__heading {
+  margin: 0 0 var(--space-xs);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-meta);
+  color: var(--book-muted, var(--color-text-muted));
+}
+
+.pressLinks__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pressLinks__item + .pressLinks__item {
+  border-top: var(--rule-hairline) solid
+    color-mix(in oklab, var(--book-faint, var(--color-rule-strong)) 45%, transparent);
+}
+
+/* Block-level, not inline: a quote plus its attribution reliably runs two
+   lines (three on a long title), and a block gives the whole thing one
+   generous hit target instead of an inline link that's only as tall as its
+   own text. */
+.pressLinks__item a {
+  display: block;
+  padding: var(--space-xs) 0;
+  border-bottom: var(--rule-hairline) solid transparent;
+  color: var(--book-muted, var(--color-text-muted));
+  text-decoration: none;
+  line-height: var(--leading-narrow);
+  transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+
+.pressLinks__item a:hover {
+  color: var(--book-text, var(--color-text));
+  border-bottom-color: color-mix(in oklab, var(--book-faint, var(--color-rule-strong)) 70%, transparent);
+}
+
+/* The only in-prose links on the page (every other link on a book page is
+   either a button-styled CTA or the fixed corner mark) -- focus has to be
+   unmistakable rather than relying on the same subtle hover treatment. */
+.pressLinks__item a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  color: var(--book-text, var(--color-text));
+}
+
+.pressLinks__quote {
+  display: block;
+  font-style: italic;
+}
+
+.pressLinks__attribution {
+  display: block;
+  margin-top: var(--space-2xs);
+  font-size: var(--text-sm);
+}
+
+/* --book-muted, not --book-faint, here too -- aria-hidden (the byline is
+   already read via the quote's own accessible name) doesn't exempt visible
+   text from WCAG 1.4.3 for a sighted reader who isn't using a screen
+   reader at all. */
+.pressLinks__quote + .pressLinks__attribution {
+  color: var(--book-muted, var(--color-text-muted));
+}
+
+.pressLinks__marker {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-meta);
+  color: var(--book-muted, var(--color-text-muted));
+}
+
+/* The PDF excerpt, for the 13 titles that have one: a generated border with
+ * the label and title set as real glyph outlines (tools/apospasma.mjs), not
+ * a text link. Sized off .readerRow__stage directly -- 90% of its height, at
+ * the asset's own 832:1248 (2:3) portrait ratio -- because the button is
+ * standing in for a much smaller text link but is shown beside the book
+ * object itself, and needs to read as an object on that scale, not a list
+ * row. One shared rule, so every book's button scales identically -- no
+ * per-book size overrides. See DECISIONS.md D25.
+ *
+ * Recoloured live via mask-image + background-color, exactly like
+ * .head__imprint above: the file ships white-on-alpha with no colour baked
+ * in, so one asset serves every book's own --book-text and repaints itself
+ * automatically if content/grounds.json ever changes. The URL is per-book,
+ * so it comes in as a custom property from the component rather than a
+ * fixed url() here (compare .head__imprint, which can hardcode one file).
+ */
+.pressLinks__excerptButton {
+  display: block;
+  height: min(56vh, 468px);
+  width: calc(min(56vh, 468px) * 832 / 1248);
+  background-color: var(--book-text, var(--color-text));
+  -webkit-mask-image: var(--apospasma-src);
+  mask-image: var(--apospasma-src);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.pressLinks__excerptButton:hover {
+  opacity: 0.78;
+}
+
+.pressLinks__excerptButton:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 899px) {
+  .pressLinks__excerptButton {
+    height: min(34vh, 297px);
+    width: calc(min(34vh, 297px) * 832 / 1248);
+  }
+}
+
+/* ---- Edition block -------------------------------------------------------
+ * The publisher's own colophon, printed as they print it: one fact per line,
+ * label and value together, in the order they give them. Sits under the
+ * book's own volume (see .readerRow__stageWrap in ReaderRow.jsx) rather than
+ * the prose beside it -- a colophon describes the object, not the synopsis.
+ *
+ * One bordered block, one row per fact -- the same light-alpha rule
+ * `.detail__buy` and `.btn--buy` already use, so it reads as apparatus in the
+ * site's own language rather than a borrowed component. Full width of the
+ * column: the book itself is centered within that same width (see
+ * book-model.js), so a full-width, evenly-bordered block reads as centered
+ * under it even where the book's own portrait cover is narrower.
+ */
+.detail__edition {
+  /* Three times the stage-to-text gap elsewhere -- this block reads as a
+     separate caption under the object, not a continuation of it. */
+  margin-top: calc(var(--space-xl) * 3);
+  /* 30% narrower than the column it sits in (which is also the book's own
+     width, see book-model.js) -- a deliberate departure from "as wide as
+     the book" now, so it no longer sits flush with the book's own left
+     edge either. .detail__buy carries the same offset (plus its own extra
+     half-step, see the comment there), so the two keep lining up with each
+     other. The `+ var(--space-sm)` beyond the base offset nudges the whole
+     pair a bit further right than flush-with-the-book. */
+  width: 70%;
+  margin-left: calc(var(--space-xl) + var(--space-sm));
+  padding: 0;
+  list-style: none;
+  font-size: 15px;
+  border: calc(var(--rule-hairline) * 2) solid
+    color-mix(in oklab, var(--book-faint, var(--color-rule-strong)) 45%, transparent);
+  border-radius: var(--radius-ui);
+  /* Clips the first/last row's square corners to the block's own rounding. */
+  overflow: hidden;
+  color: var(--book-muted, var(--color-text-muted));
+}
+
+.detail__edition li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-md);
+  margin: 0;
+  padding: calc(var(--space-2xs) / 2) var(--space-sm);
+}
+
+.detail__edition li + li {
+  border-top: calc(var(--rule-hairline) * 2) solid
+    color-mix(in oklab, var(--book-faint, var(--color-rule-strong)) 45%, transparent);
+}
+
+.detail__editionValue {
+  text-align: right;
+}
+
+/* ---- The held-book teaser ------------------------------------------------
+ * The publisher's one-line note about a book, shown while the reader is
+ * TURNING it and has not opened it. A book in the hand is a question -- what is
+ * this one? -- and this answers it without making the reader commit to the
+ * reading view and then come back.
+ *
+ * Fixed to the viewport rather than tracked to the book: the book is moving
+ * under the reader's own pointer, and a label chasing it is a label that
+ * cannot be read. It lands in one of the four corners, rolled fresh in
+ * Catalogue.jsx each time a drag starts, so the same corner isn't spent by
+ * the same spot on the shelf every time.
+ *
+ * A sharp-edged card: square corners, no radius, no border -- so it reads as
+ * a cut label rather than a soft tooltip. Wide rather than tall: a book's
+ * teaser is a sentence, not a column, and a near-square card reads as a
+ * sticky note where a wide one reads as a caption.
+ *
+ * The fill is that same book's `text` colour -- what its title and nav mark
+ * carry once the book is actually open -- painted solid, so the label reads
+ * clean against whatever is moving underneath it during the drag. The text
+ * itself is set in `reading`, the background its reading panel opens onto:
+ * fill and words trade places with what the reader is about to see. Both
+ * come straight from content/grounds.json, nothing here invents a colour.
+ *
+ * z-index is inherited, not set here: .shell (z-index 2) already sits above
+ * .bookcanvas (z-index 0) as siblings, and .teaser lives inside .shell, so
+ * the book sits behind the label by construction -- see DECISIONS around D7.
+ */
+.teaser {
+  position: fixed;
+  z-index: 6;
+  max-width: min(34rem, calc(100vw - var(--page-margin) * 2));
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  border-radius: 0;
+  background: var(--teaser-fill, var(--color-ink-raised));
+  color: var(--teaser-text, var(--color-text));
+  font-family: var(--font-body-italic);
+  font-style: italic;
+  font-weight: var(--weight-body-b);
+  line-height: var(--leading-body);
+  /* Never the interactive surface: the pointer is mid-drag and belongs to the
+     book. Same rule the canvas follows. */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+/* Both axes clamp between the original edge-safe minimum (clears the fixed
+   nav, never crowds the true corner) and a vh-scaled value that pulls the
+   card toward the vertical middle of the room on anything taller than a
+   phone -- so the four corners keep the label out of the pointer's way
+   without pinning it to the extreme edge. */
+.teaser[data-corner='top-left'],
+.teaser[data-corner='top-right'] {
+  top: clamp(calc(56px + var(--space-2xl)), 20vh, 260px);
+  transform: translateY(-0.4rem);
+}
+
+.teaser[data-corner='bottom-left'],
+.teaser[data-corner='bottom-right'] {
+  bottom: clamp(var(--space-2xl), 20vh, 260px);
+  transform: translateY(0.4rem);
+}
+
+/* Inset well past --page-margin (which butts text against the true edge) --
+   this is the corner pulled a bigger step in, toward the middle of the room,
+   scaling with viewport width rather than sitting at a near-fixed distance
+   from it. */
+.teaser[data-corner='top-left'],
+.teaser[data-corner='bottom-left'] {
+  left: clamp(3rem, 16vw, 16rem);
+}
+
+.teaser[data-corner='top-right'],
+.teaser[data-corner='bottom-right'] {
+  right: clamp(3rem, 16vw, 16rem);
+}
+
+.teaser[data-show] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teaser {
+    transition-duration: var(--dur-instant);
+    transform: none;
+  }
+}
+
+/* Back under the colophon (ReaderRow.jsx). margin-top is just a gap above
+   it, separating it from the list it answers rather than reading as one
+   more row of it. Width is .detail__edition's own `70%` minus a bit,
+   resolved against the same parent -- deliberately a touch narrower than
+   the list now, not an exact match.
+ *
+ * margin-left is NOT the list's own -- it's that plus half the width
+ * difference between the two (the list's `70%` less the button's own
+ * `70% - space-xl` is exactly one `space-xl`, so half of it centers the
+ * button in the list's span rather than merely matching its left edge).
+ * `calc(var(--space-xl) * 1.5)` is that sum, kept as one expression tied
+ * to the same tokens instead of a second hand-measured offset. The
+ * trailing `+ var(--space-sm)` matches .detail__edition's own rightward
+ * nudge, so the centering holds at the new position instead of drifting
+ * apart. */
+.detail__buy {
+  margin-top: var(--space-lg);
+  margin-left: calc(var(--space-xl) * 1.5 + var(--space-sm));
+  width: calc(70% - var(--space-xl));
+}
+
+/* One link, to the publisher's own page for this title. It is an ANCHOR now,
+   not a button: it goes somewhere real, so it must be announced as a link,
+   openable in a new tab, and copyable. The placeholder pair it replaces were
+   <button>s precisely because they went nowhere. */
+.btn--buy {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  text-decoration: none;
+  /* Vertical padding is zero, not copied from .detail__edition li's -- this
+     button carries a full border on all four sides where a cell only ever
+     gets a shared 1-sided divider from its neighbour, and that border
+     eats exactly the space the li's own padding would otherwise take up.
+     Zeroing it here is what makes the OUTER box -- border included -- come
+     out to the same total height as a cell's, rather than a border's
+     worth taller. Horizontal padding still matches, purely for the same
+     text inset from the edge. Replaces the old min-height/padding-inline,
+     which were sized for a standalone button, not one meant to read as a
+     row's twin. */
+  padding: 0 var(--space-sm);
+  border: calc(var(--rule-hairline) * 2) solid
+    color-mix(in oklab, var(--book-faint, var(--color-rule-strong)) 70%, transparent);
+  border-radius: var(--radius-ui);
+  background: none;
+  /* Family, weight, line-height and letter-spacing are all left unset here
+     on purpose -- .detail__editionLabel doesn't set them either, so both
+     inherit body's ambient Literata straight through. Size and colour are
+     matched explicitly instead: this button is a sibling of
+     .detail__edition, not a descendant, so it can't pick up that block's
+     own font-size or --book-muted by inheritance the way a cell's label
+     and value do. */
+  font-size: 15px;
+  color: var(--book-muted, var(--color-text-muted));
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-instant) var(--ease-out);
+}
+
+/* Same swap the held-book teaser already uses (see .teaser above): fill and
+   words trade places with what the reader is about to see. The book's own
+   `text` colour becomes a solid fill, and the label takes `reading` -- the
+   colour the room the reader is ALREADY on opens onto -- rather than a
+   fixed light/dark pair, so it stays legible whichever polarity this book's
+   room happens to be. Border matches the fill so the stroke disappears into
+   one solid block instead of staying a visible ring around it. */
+.btn--buy:hover {
+  background: var(--book-text, var(--color-text));
+  border-color: var(--book-text, var(--color-text));
+  color: var(--reading-ground, var(--color-ink));
+}
+
+.btn--buy:active {
+  transform: translateY(-1px);
+}
+
+/* ---- Mobile --------------------------------------------------------------
+ * The stack goes full-bleed and taller, where the shallower rake puts the
+ * cover art rather than the spine in charge. The reading view stacks: book
+ * above, words below.
+ */
+@media (max-width: 899px) {
+  .readerRow {
+    /* Stacked: the book takes the height it needs at the top, the words
+       take what follows. */
+    grid-template-columns: 1fr;
+    /* Clear the rail: at this width the back control sits over the text
+       column, and a title half-hidden behind an arrow is worse than a
+       narrower measure. */
+    padding-left: calc(var(--page-margin) + 80px);
+    padding-top: clamp(3.5rem, 9vh, 5rem);
+  }
+
+  /* `position: sticky`'s containing block, for a grid item, is the whole
+     grid CONTAINER here, not the single-column row it visually occupies
+     (the two-column desktop layout never exposed this, because there the
+     stage and the text share one row and sticky is supposed to roam that
+     row's full height). Stacked to one column, that same rule let the stage
+     -- cover, colophon and buy button together -- keep sliding down and
+     sticking over the text of THIS SAME row and the next one for the
+     entire scroll, instead of releasing once its own content had passed.
+     Static removes the ambiguity outright: on a phone the object sits once,
+     at the top of its row, exactly where "holds it" already said it should. */
+  .readerRow__stageWrap {
+    position: static;
+  }
+
+  .readerRow__stage {
+    /* Sized for presence, not to fit beside the rail -- a bigger book
+       reading as a bigger book matters more here than keeping clear of
+       the fixed rail beside it (see .rail above), so this is free to run
+       under it. */
+    height: min(54vh, 480px);
+    scroll-margin-top: clamp(3.5rem, 9vh, 5rem);
+  }
+
+  .readerRow__text {
+    max-width: none;
+  }
+
+  .rail {
+    left: var(--page-margin);
+  }
+
+  /* Seventeen ticks at phone height is a 12px target sitting on top of the
+     body copy on the SHELF -- there's no "position in the catalogue" to
+     read there, only the stack itself, so the readout is worse than no
+     readout at all and only the back control stays (moot on the shelf
+     anyway, since it renders no back control -- see `backHref` in
+     Rail.jsx). A book page is different: this IS the reader's position in
+     the catalogue, and the words scrolling past need answering with
+     something more useful than the corner mark, so `.rail--book` (the class
+     Rail.jsx sets only when `backHref` is passed) brings the full readout
+     back there. */
+  .rail__ticks {
+    display: none;
+  }
+
+  .rail--book .rail__ticks {
+    display: flex;
+    /* Desktop's 280px reaches out to cover a hovered title
+       (.rail__activeTitle) so a mouse sliding toward it never leaves the
+       hoverable box -- see the full reasoning on .rail__ticks above. Touch
+       has no hover to protect, and this fixed, z-index:40 list sits over
+       the real page underneath it: left at 280px, that invisible reach
+       would sit on top of this row's own buy button and press links, and a
+       real tap on "Αγορά" would land on the ticks' padding instead of the
+       control actually drawn there. Zeroed, so the tappable box is exactly
+       the ticks themselves. */
+    padding-right: 0;
+  }
+
+  .rail__tick {
+    width: 20px;
+  }
+
+  .rail__tickLine {
+    width: 20px;
+    /* Same resting proportion as desktop's 0.78 (see the base rule above) --
+       the previous 0.5 here shrank the line on TOP OF the already-smaller
+       mobile width, leaving a resting mark too faint to read as a line. */
+    transform: scaleX(0.78);
+  }
+
+  /* The chevron's own ink sits well inside its 20px SVG box (see the path
+     in Rail.jsx: it tapers from the box's right side, not its left), so
+     the box-flush alignment desktop uses (.rail__back's -12px above)
+     leaves the visible arrow tip sitting to the right of where the now-short
+     mobile ticks start. Shifted further left here, mobile only, to bring
+     the arrow's actual ink back flush with the ticks' own left edge. */
+  .rail__back {
+    margin-left: -15px;
+  }
+
+  /* A hover readout with no hover to trigger it: touch has no equivalent,
+     so this either never appears or flickers in on a stray synthetic event
+     -- neither is the deliberate "reading while hovering" it's for on
+     desktop. Off entirely here rather than chasing touch parity for it. */
+  .rail__activeTitle {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .slot {
+    width: 100vw;
+    max-width: 100vw;
+    /* Tighter than desktop's row on purpose: rows are contiguous, zero gap,
+       by design (see .stack above), so THIS is the whole knob for how much
+       of one book shows before the next one takes over -- shrunk together
+       with the mobile zoom in BookVolume.jsx's MOBILE_STACK_ZOOM, so the
+       pile reads as a denser run of overlapping spines rather than a wider
+       gap between fewer, bigger ones. */
+    height: clamp(110px, 30vw, 190px);
+  }
+
+  .intro {
+    padding-block: var(--space-xl) clamp(3rem, 9vh, 5rem);
+  }
+}
+
+/* ---- The DOM fallback under a live canvas --------------------------------
+ * Once a renderer exists the spine bar is redundant ink on top of the volume,
+ * so it fades out. It fades rather than being removed: it must stay in the
+ * accessibility tree, stay focusable and stay crawlable, because it IS the
+ * book as far as a screen reader, a keyboard and a crawler are concerned.
+ *
+ * :focus-visible, not :focus-within -- pressing a book to drag it also focuses
+ * it, and a :focus-within rule would bring the flat bar back up over the
+ * volume for the whole gesture and leave it there afterwards.
+ */
+.webgl-on .slot__hit {
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.webgl-on .slot__hit:focus-visible {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   THE MARK
+   One page, one language, nowhere to navigate to -- so the bar is gone and
+   what remains is the imprint's initials in the corner. A fixed link rather
+   than a strip, so nothing spans the top of the page and competes with the
+   books for the reader's first look.
+   ========================================================================== */
+
+.head {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+}
+
+/* One mark now, not a lockup of two: the author's initials and the separate
+ * imprint wordmark are both gone, replaced by the publisher's own glyph
+ * (see Nav.jsx) -- the same asset .foot__bleed carries, at the top of the
+ * page instead of the bottom. Recoloured via mask, not painted as an <img>:
+ * the file supplies the SHAPE (its own alpha channel), and this fill
+ * supplies the colour -- --book-text, the same tint the reading ground
+ * gives everything else fixed on screen while a book is open. An <img>
+ * would paint its own baked-in white regardless of that colour; only an
+ * empty element masked by the image can be recoloured this way.
+ */
+.head__mark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--space-md) 0 var(--space-md) var(--space-lg);
+  opacity: 0.72;
+  text-decoration: none;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+/* Below 899px the rail switches its own left inset from --space-lg to the
+   narrower --page-margin (see .rail's mobile override) -- its ticks track
+   the viewport's own shrinking margin rather than staying pinned to the
+   wider desktop gutter. The mark's padding-left doesn't follow that switch
+   on its own (it's a fixed --space-lg at every width), so left uncorrected
+   the corner glyph and the rail below it drift out of column exactly where
+   the two are meant to read as one flush-left edge. This brings the mark
+   back into that column -- the rail itself is untouched. */
+@media (max-width: 899px) {
+  .head__mark {
+    padding-left: var(--page-margin);
+  }
+}
+
+.head__mark-glyph {
+  display: inline-block;
+  height: 2.75rem;
+  width: auto;
+  /* Same source, same ratio as .foot__bleed below (332x947 of trimmed
+     artwork). */
+  aspect-ratio: 332 / 947;
+  background-color: var(--book-text, var(--color-text));
+  -webkit-mask-image: url('/elefant-mark.webp');
+  mask-image: url('/elefant-mark.webp');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.head__mark:hover {
+  /* The old dim was 1 -> 0.7 (30% down). Base is 0.72 now, not 1, so the same
+     30% is taken off THAT to keep the hover response felt rather than lost
+     next to the new resting opacity. */
+  opacity: 0.5;
+}
+
+/* It STAYS while a book is being handled.
+ *
+ * It used to fade out with the standing text, on the reasoning that everything
+ * steps aside for the object in the reader's hand. The standing text should:
+ * it is a paragraph competing for the same attention. The mark is not competing
+ * -- it is the one fixed point that says which site this is, and blanking the
+ * top-left corner mid-gesture reads as the page breaking rather than as the
+ * page clearing.
+ *
+ * Only the pointer steps aside: mid-drag the gesture belongs to the book, so
+ * the mark cannot become a link the drag ends on. */
+.is-dragging .head__mark {
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   FOOTER
+   The closing chapter, not a strip of small print. A catalogue with no shop
+   has no call to action, so this does what the end of a book does: states the
+   imprint, the extent of the collection, and the terms the material is here
+   under.
+
+   No hairline marks where the page ends and this begins -- that rule was the
+   one thing that made it read as a strip glued to the bottom rather than a
+   panel folded over the page. In its place: a flat plain-black ground (a
+   deliberate departure from the warm near-black --color-ink-* scale used
+   everywhere else, see tokens.css -- the footer is asked to read as its own
+   closing plate, not a continuation of the page ink), and the mark's own
+   glyph held back in tone and bled up past the footer's own top edge
+   (.foot__bleed) -- into the intro section's own trailing air, never its
+   content. Same device a dust jacket flap uses: it overlaps the last leaf,
+   it doesn't sit beside it.
+   ========================================================================== */
+
+.foot {
+  --foot-seam: clamp(5rem, 14vh, 9rem);
+  position: relative;
+  z-index: 2;
+  padding-block: var(--foot-seam) clamp(3rem, 8vh, 5rem);
+  background-color: #000;
+}
+
+/* The corner mark. Decorative and inert: aria-hidden, unclickable, and pinned
+   to a NEGATIVE z-index so it always paints behind .foot__inner regardless
+   of either element's own position/DOM quirks -- see the mask technique note
+   on .head__mark-glyph above, which this shares. Full strength (opacity 1), not
+   held back as a faint watermark -- against the footer's own plain-black
+   ground it reads as a mark, not a stain.
+
+   The source glyph is much taller than it is wide (332x947). Height is the
+   dimension that has to stay bounded here (a corner accent tall enough to
+   rival the footer's own content would stop reading as a watermark), so
+   height is the one clamped directly and width is DERIVED from it via the
+   glyph's own ratio (--bleed-h * 332/947) rather than clamped separately.
+   Two independently-clamped dimensions that don't share the source's ratio
+   is what caused the earlier bug: at any given width the box's height came
+   out far shorter than `aspect-ratio: 332/947` needs, so `overflow: hidden`
+   cropped away most of the glyph (everything below the headpiece) instead
+   of merely guarding against rendering quirks.
+
+   A two-value `mask-size` (width fixed, height auto) was tried before that
+   and rejected -- it isn't reliably honoured the way it is for
+   `background-size`, and silently collapsed to a 100%/100% NON-uniform
+   stretch on at least one real engine, squashing the tall glyph into the
+   box and reading as a smear rather than a crop. `mask-size: contain` on
+   ::before (below), sized to the glyph's exact aspect ratio, is the
+   distortion-free fit; because the wrapper below now shares that same
+   ratio, ::before's rendered height lands exactly on the wrapper's own
+   height with nothing left to crop -- `overflow: hidden` stays only as a
+   guard against a future mismatch, not a working crop. */
+.foot__bleed {
+  --bleed-h: clamp(14rem, 32vh, 23rem);
+  position: absolute;
+  z-index: -1;
+  top: clamp(-4rem, -7vw, -2rem);
+  right: clamp(0.5rem, 4vw, 3rem);
+  height: var(--bleed-h);
+  width: calc(var(--bleed-h) * 332 / 947);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.foot__bleed::before {
+  content: '';
+  display: block;
+  width: 100%;
+  aspect-ratio: 332 / 947;
+  background-color: var(--color-text);
+  opacity: 1;
+  -webkit-mask-image: url('/elefant-mark.webp');
+  mask-image: url('/elefant-mark.webp');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: top center;
+  mask-position: top center;
+}
+
+.foot__inner {
+  display: grid;
+  gap: clamp(2rem, 5vh, 3.5rem);
+}
+
+.foot__lockup {
+  display: flex;
+  align-items: center;
+}
+
+/* The imprint, set at display scale. It is the largest type on the page after
+   the catalogue's own title, which is the correct weighting: the books are
+   theirs. */
+/* The publisher's own wordmark artwork (public/Keimena-Logo-Horizontal.png),
+   not set type -- no webfont in this stack reproduces its lettering, so the
+   real logo file is used directly. Same masked-span technique as
+   .head__imprint and .head__mark-glyph: the PNG ships as near-black glyphs on
+   transparency, so its own alpha channel supplies the SHAPE and this fill
+   supplies the colour -- an <img> would paint its baked-in black regardless
+   of the footer's colour scheme. role="img" + aria-label carries the name
+   that used to be live text (s.buyAt, "Εκδόσεις Κείμενα") -- see Footer.jsx. */
+.foot__mark {
+  display: inline-block;
+  height: clamp(2.25rem, 7vw, 5rem);
+  width: auto;
+  /* Source artwork is 804x85 of trimmed lettering. */
+  aspect-ratio: 804 / 85;
+  background-color: var(--color-text);
+  -webkit-mask-image: url('/Keimena-Logo-Horizontal.png');
+  mask-image: url('/Keimena-Logo-Horizontal.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: left center;
+  mask-position: left center;
+}
+
+.foot__row {
+  padding-top: var(--space-lg);
+  border-top: var(--rule-hairline) solid var(--color-rule);
+}
+
+.foot__factsBlock {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+/* Attributes the three numbers below it to the author they describe, rather
+   than leaving them to read as the publisher's own statistics. Set in the
+   site's own display face -- never below 24px (GFS Didot's own floor,
+   DESIGN.md §3) -- so it reads as the catalogue's voice picking back up
+   right after the publisher's own wordmark above it. */
+.foot__byline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.2vw, 1.875rem);
+  line-height: var(--leading-head);
+  letter-spacing: var(--track-head);
+  color: #fff;
+}
+
+.foot__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xl) clamp(2rem, 6vw, 5rem);
+  margin: 0;
+}
+
+.foot__fact dt {
+  margin-bottom: var(--space-2xs);
+}
+
+.foot__fact dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+/* align-items: center, not the flex default of stretch -- the three marks
+   are different heights (.foot__socialIcon--sm), and a stretched <li> lets
+   its <a> sit at its own natural (shorter) height rather than filling the
+   row, which top-aligns YouTube against the other two instead of centring
+   it on their shared axis. */
+.foot__socialList {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* No chip drawn here any more -- each mark now carries its OWN shape and
+   colour already (tools/social-marks.py), so a uniform circle behind all
+   three forced Facebook's circle, YouTube's wide rounded rect and
+   Instagram's square frame into one identical silhouette, flattening the
+   exact distinctiveness a real icon set has. This is a plain hit target:
+   same "tactile translateY(-1px), no glow" the site's other buttons use
+   (DESIGN.md §4), nothing else. */
+.foot__socialLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem;
+  margin: -0.6rem;
+  transition: transform var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
+}
+
+.foot__socialLink:hover,
+.foot__socialLink:focus-visible {
+  transform: translateY(-1px);
+  opacity: 0.8;
+}
+
+/* Real <img>, each at its own true aspect ratio -- a fixed width AND height
+   here would stretch Facebook's circle into an oval and squash YouTube's
+   rounded rect. Height is the one constraint; width follows from the
+   intrinsic size on the element itself. */
+.foot__socialIcon {
+  height: 2.25rem;
+  width: auto;
+}
+
+/* YouTube's rounded rect is visually heavier than the other two at the same
+   height -- more filled area, no thin strokes to lighten it -- so it reads
+   larger than Facebook's circle or Instagram's frame even at an identical
+   box height. Brought down a step to match their optical weight. */
+.foot__socialIcon--sm {
+  height: 1.7rem;
+}
+
+/* The social row lives here now, first -- below the rule, not sharing the
+   facts row's line above it. A larger first gap than the --space-sm between
+   the fine-print lines themselves: the icons are a head taller than a line
+   of type, and the tight rhythm sized for text alone read as crowded under
+   them. */
+.foot__fine {
+  display: grid;
+  gap: var(--space-sm);
+  padding-top: var(--space-lg);
+  border-top: var(--rule-hairline) solid var(--color-rule);
+}
+
+.foot__fine > .foot__social {
+  margin-bottom: var(--space-xs);
+}
+
+.foot__fine p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Tagged rather than folded into the quiet fine print above it, so the
+   notice reads as a deliberate stamp -- the same register as the "out now"
+   marker (DESIGN.md §2), which is the one other place this system spends its
+   accent colour on a status flag rather than a control. */
+.foot__testTag {
+  display: inline-block;
+  margin-inline-end: var(--space-sm);
+  padding: 0.15em 0.5em;
+  border: var(--rule-hairline) solid currentColor;
+  border-radius: var(--radius-ui);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-meta);
+  color: var(--color-accent);
+  vertical-align: 0.1em;
+}
+
+/* Mobile-only: the wordmark's own floor comes down at phone widths, since it
+   was sized to balance against the (now-removed) elephant glyph beside it. */
+@media (max-width: 767px) {
+  .foot__mark {
+    height: clamp(1.75rem, 6.5vw, 2.75rem);
+  }
+}
+
+/* ==========================================================================
+   TAIL SPACE
+   The last books in the stack could never be scrolled into the reading zone:
+   the page ended level with them, so the newest title could reach the middle
+   of the viewport and the oldest could not. The stack now carries half a
+   viewport of room after it, which fixes the scroll AND the rail, since both
+   measure against the viewport centre.
+   ========================================================================== */
+
+.stack {
+  /* Was 52vh (capped at 26rem), on the reasoning above that the last book needs
+     half a viewport after it to reach the reading zone. That requirement is
+     real, but this padding was never what met it: the standing text and the
+     footer sit below the stack too, and measured at 1440x900 they contribute
+     about 1285px against a 450px requirement -- the padding was carrying 1403px
+     of slack and reading as a hole between the last spine and the bio.
+
+     So it is cut to what it is actually for, which is air, not clearance. The
+     guarantee is unaffected and still holds with room to spare at every
+     viewport: even at zero padding the content below the last book's centre is
+     three times the half-viewport the scroll and the rail need. */
+  padding-bottom: clamp(1.25rem, 5vh, 3rem);
+}
+
+/* ==========================================================================
+   LOADER
+   A book opening, fanning and closing, drawn in the same hairline register as
+   the rules and the rail. It replaces the row of spine bars that used to show
+   through before the canvas arrived -- seventeen grey placeholders pretending
+   to be the thing the reader was waiting for.
+
+   VISIBLE FROM THE FIRST PAINT, and cleared by `data-loaded` on the document.
+   The first version had this the other way round -- hidden until JavaScript
+   revealed it -- which meant that between first paint and hydration a reader
+   saw the bare fallback bars: exactly the thing the loader exists to replace.
+   The no-JavaScript escape moved to a <noscript> override in the root layout,
+   alongside a timeout that clears the loader even if the bundle never arrives.
+   ========================================================================== */
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  /* The same sheet as the room, not a flat field: this covers the viewport
+     until the books are ready, and lifting it off a different surface than the
+     one underneath is a visible change of ground at the worst moment. Both
+     layers are fixed to the viewport and painted identically, so the handover
+     is invisible. Keep this in sync with html::before above -- it was left
+     behind pointing at the old tiled background.webp after that rule moved to
+     newbg-test.webp, which showed the old ground through the loader on every
+     load and reload. */
+  background-color: var(--color-ink-canvas);
+  background-image: url('/textures/newbg-test.webp');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+[data-loaded] .loader {
+  display: none;
+}
+
+.loader__inner {
+  display: grid;
+  justify-items: center;
+  /* translateY, not margin: margin-top on a center-aligned item only nets
+     HALF its value (centering re-splits the leftover space around the
+     margin box), which is why a first attempt at this looked like it did
+     nothing. A transform is applied after alignment, so it moves the book
+     by exactly the declared amount. */
+  transform: translateY(4.5rem);
+}
+
+/* ---- The book, pages turning ---------------------------------------------
+ * Markup and keyframes are Uiverse.io's "Book" loader by anand_4957 (five
+ * pages, each flipping on its own delay, is what makes it read as a
+ * shuffling stack rather than one card turning) -- kept structurally intact.
+ * The colour is not: the original is a stock purple with cool blue-grey
+ * pages, and this site permits neither (D6: warm hues only, one accent).
+ * Every colour below is a color-mix() off an existing token, so the loader
+ * can never drift from the palette the rest of the site is gated against.
+ */
+.book,
+.book__pg-shadow,
+.book__pg {
+  animation: loader-cover 5s ease-in-out infinite;
+}
+
+.book {
+  font-size: clamp(15px, 2vw, 21px);
+  background-color: var(--color-accent);
+  border-radius: 0.25em;
+  box-shadow:
+    0 0.25em 0.5em hsla(0, 0%, 0%, 0.3),
+    0 0 0 0.25em color-mix(in oklab, var(--color-accent) 78%, black) inset;
+  padding: 0.25em;
+  perspective: 37.5em;
+  position: relative;
+  width: 8em;
+  height: 6em;
+  transform: translate3d(0, 0, 0);
+  transform-style: preserve-3d;
+}
+
+.book__pg-shadow,
+.book__pg {
+  position: absolute;
+  left: 0.25em;
+  width: calc(50% - 0.25em);
+}
+
+.book__pg-shadow {
+  animation-name: loader-shadow;
+  background-image: linear-gradient(
+    -45deg,
+    hsla(0, 0%, 0%, 0) 50%,
+    hsla(0, 0%, 0%, 0.3) 50%
+  );
+  filter: blur(0.25em);
+  top: calc(100% - 0.25em);
+  height: 3.75em;
+  transform: scaleY(0);
+  transform-origin: 100% 0%;
+}
+
+.book__pg {
+  animation-name: loader-pg1;
+  background-color: var(--color-text);
+  background-image: linear-gradient(
+    90deg,
+    transparent 87.5%,
+    color-mix(in oklab, var(--color-text) 88%, black)
+  );
+  height: calc(100% - 0.5em);
+  transform-origin: 100% 50%;
+}
+
+.book__pg--2,
+.book__pg--3,
+.book__pg--4 {
+  background-image: repeating-linear-gradient(
+      var(--color-ink-recessed) 0 0.125em,
+      transparent 0.125em 0.5em
+    ),
+    linear-gradient(90deg, transparent 87.5%, color-mix(in oklab, var(--color-text) 88%, black));
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size:
+    2.5em 4.125em,
+    100% 100%;
+}
+
+.book__pg--2 {
+  animation-name: loader-pg2;
+}
+.book__pg--3 {
+  animation-name: loader-pg3;
+}
+.book__pg--4 {
+  animation-name: loader-pg4;
+}
+.book__pg--5 {
+  animation-name: loader-pg5;
+}
+
+@keyframes loader-cover {
+  from,
+  5%,
+  45%,
+  55%,
+  95%,
+  to {
+    animation-timing-function: ease-out;
+    background-color: color-mix(in oklab, var(--color-accent) 88%, white);
+  }
+  10%,
+  40%,
+  60%,
+  90% {
+    animation-timing-function: ease-in;
+    background-color: color-mix(in oklab, var(--color-accent) 62%, black);
+  }
+}
+@keyframes loader-shadow {
+  from,
+  10.01%,
+  20.01%,
+  30.01%,
+  40.01% {
+    animation-timing-function: ease-in;
+    transform: translate3d(0, 0, 1px) scaleY(0) rotateY(0);
+  }
+  5%,
+  15%,
+  25%,
+  35%,
+  45%,
+  55%,
+  65%,
+  75%,
+  85%,
+  95% {
+    animation-timing-function: ease-out;
+    transform: translate3d(0, 0, 1px) scaleY(0.2) rotateY(90deg);
+  }
+  10%,
+  20%,
+  30%,
+  40%,
+  50%,
+  to {
+    animation-timing-function: ease-out;
+    transform: translate3d(0, 0, 1px) scaleY(0) rotateY(180deg);
+  }
+  50.01%,
+  60.01%,
+  70.01%,
+  80.01%,
+  90.01% {
+    animation-timing-function: ease-in;
+    transform: translate3d(0, 0, 1px) scaleY(0) rotateY(180deg);
+  }
+  60%,
+  70%,
+  80%,
+  90%,
+  to {
+    animation-timing-function: ease-out;
+    transform: translate3d(0, 0, 1px) scaleY(0) rotateY(0);
+  }
+}
+@keyframes loader-pg1 {
+  from,
+  to {
+    animation-timing-function: ease-in-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(0.4deg);
+  }
+  10%,
+  15% {
+    animation-timing-function: ease-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(180deg);
+  }
+  20%,
+  80% {
+    animation-timing-function: ease-in;
+    background-color: color-mix(in oklab, var(--color-text) 45%, black);
+    transform: translate3d(0, 0, 1px) rotateY(180deg);
+  }
+  85%,
+  90% {
+    animation-timing-function: ease-in-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(180deg);
+  }
+}
+@keyframes loader-pg2 {
+  from,
+  to {
+    animation-timing-function: ease-in;
+    background-color: color-mix(in oklab, var(--color-text) 45%, black);
+    transform: translate3d(0, 0, 1px) rotateY(0.3deg);
+  }
+  5%,
+  10% {
+    animation-timing-function: ease-in-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(0.3deg);
+  }
+  20%,
+  25% {
+    animation-timing-function: ease-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(179.9deg);
+  }
+  30%,
+  70% {
+    animation-timing-function: ease-in;
+    background-color: color-mix(in oklab, var(--color-text) 45%, black);
+    transform: translate3d(0, 0, 1px) rotateY(179.9deg);
+  }
+  75%,
+  80% {
+    animation-timing-function: ease-in-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(179.9deg);
+  }
+  90%,
+  95% {
+    animation-timing-function: ease-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(0.3deg);
+  }
+}
+@keyframes loader-pg3 {
+  from,
+  10%,
+  90%,
+  to {
+    animation-timing-function: ease-in;
+    background-color: color-mix(in oklab, var(--color-text) 45%, black);
+    transform: translate3d(0, 0, 1px) rotateY(0.2deg);
+  }
+  15%,
+  20% {
+    animation-timing-function: ease-in-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(0.2deg);
+  }
+  30%,
+  35% {
+    animation-timing-function: ease-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(179.8deg);
+  }
+  40%,
+  60% {
+    animation-timing-function: ease-in;
+    background-color: color-mix(in oklab, var(--color-text) 45%, black);
+    transform: translate3d(0, 0, 1px) rotateY(179.8deg);
+  }
+  65%,
+  70% {
+    animation-timing-function: ease-in-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(179.8deg);
+  }
+  80%,
+  85% {
+    animation-timing-function: ease-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(0.2deg);
+  }
+}
+@keyframes loader-pg4 {
+  from,
+  20%,
+  80%,
+  to {
+    animation-timing-function: ease-in;
+    background-color: color-mix(in oklab, var(--color-text) 45%, black);
+    transform: translate3d(0, 0, 1px) rotateY(0.1deg);
+  }
+  25%,
+  30% {
+    animation-timing-function: ease-in-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(0.1deg);
+  }
+  40%,
+  45% {
+    animation-timing-function: ease-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(179.7deg);
+  }
+  50% {
+    animation-timing-function: ease-in;
+    background-color: color-mix(in oklab, var(--color-text) 45%, black);
+    transform: translate3d(0, 0, 1px) rotateY(179.7deg);
+  }
+  55%,
+  60% {
+    animation-timing-function: ease-in-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(179.7deg);
+  }
+  70%,
+  75% {
+    animation-timing-function: ease-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(0.1deg);
+  }
+}
+@keyframes loader-pg5 {
+  from,
+  30%,
+  70%,
+  to {
+    animation-timing-function: ease-in;
+    background-color: color-mix(in oklab, var(--color-text) 45%, black);
+    transform: translate3d(0, 0, 1px) rotateY(0);
+  }
+  35%,
+  40% {
+    animation-timing-function: ease-in-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(0deg);
+  }
+  50% {
+    animation-timing-function: ease-in-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(179.6deg);
+  }
+  60%,
+  65% {
+    animation-timing-function: ease-out;
+    background-color: var(--color-text);
+    transform: translate3d(0, 0, 1px) rotateY(0);
+  }
+}
+
+/* While the catalogue is loading the books stay out of sight entirely: the
+   canvas is blank and the spine bars are the fallback, and showing either
+   behind the loader would be showing the reader the half-built thing. */
+html:not([data-loaded]) .bookcanvas,
+html:not([data-loaded]) .slot__hit,
+html:not([data-loaded]) .rail {
+  opacity: 0;
+}
+
+/* The books arrive rather than snapping in. */
+.bookcanvas,
+.rail {
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+/* Under reduced motion the loader is a still book, cover shut, not a loop.
+ * It still reports that work is happening; it just does not move. With no
+ * animation running, every page div falls back to its un-rotated resting
+ * transform (`none`) and stacks flat behind the last one in the markup, so
+ * what's left is simply the cover and a plain top page -- a still, sensible
+ * frame, not a freeze mid-flip. */
+@media (prefers-reduced-motion: reduce) {
+  .loader,
+  .book,
+  .book__pg-shadow,
+  .book__pg {
+    animation: none;
+  }
+}

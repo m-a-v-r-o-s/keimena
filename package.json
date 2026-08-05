@@ -1,0 +1,23 @@
+{
+  "name": "markaris-press",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Catalogue site for the works of Petros Markaris. Greek-first, static.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "contrast": "python3 tools/contrast.py"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^9.6.1",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "opentype.js": "^1.3.4"
+  }
+}

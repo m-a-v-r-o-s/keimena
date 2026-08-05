@@ -1,0 +1,155 @@
+{
+  "ola-gia-tin-anaptyxi": {
+    "ground": "#2E1625",
+    "reading": "#001B0C",
+    "teaserFill": "#4B1C3B",
+    "polarity": "dark",
+    "text": "#D08EB7",
+    "muted": "#AB6C93",
+    "faint": "#8D5076"
+  },
+  "i-apati-einai-to-mellon": {
+    "ground": "#1D1F24",
+    "reading": "#B6A27E",
+    "teaserFill": "#2B3038",
+    "polarity": "light",
+    "text": "#151A23",
+    "muted": "#353B46",
+    "faint": "#4E5460"
+  },
+  "i-via-tis-apotychias": {
+    "ground": "#251C25",
+    "reading": "#260713",
+    "teaserFill": "#3C2B3C",
+    "polarity": "dark",
+    "text": "#B196B0",
+    "muted": "#8E758E",
+    "faint": "#725A72"
+  },
+  "i-exegersi-ton-karyatidon": {
+    "ground": "#221F18",
+    "reading": "#270900",
+    "teaserFill": "#676252",
+    "polarity": "dark",
+    "text": "#A7A08A",
+    "muted": "#847D68",
+    "faint": "#68624E"
+  },
+  "to-kinima-tis-aftoktonias": {
+    "ground": "#2D1B0A",
+    "reading": "#001922",
+    "teaserFill": "#633E1C",
+    "polarity": "dark",
+    "text": "#CD9769",
+    "muted": "#A87447",
+    "faint": "#8A592B"
+  },
+  "o-fonos-einai-chrima": {
+    "ground": "#1F1F1F",
+    "reading": "#0A112C",
+    "teaserFill": "#626262",
+    "polarity": "dark",
+    "text": "#A0A0A0",
+    "muted": "#7D7D7D",
+    "faint": "#616161"
+  },
+  "i-epochi-tis-ypokrisias": {
+    "ground": "#20201A",
+    "reading": "#130E2B",
+    "teaserFill": "#313127",
+    "polarity": "dark",
+    "text": "#A1A192",
+    "muted": "#7E7E70",
+    "faint": "#636355"
+  },
+  "palia-poly-palia": {
+    "ground": "#281C19",
+    "reading": "#001923",
+    "teaserFill": "#6D544E",
+    "polarity": "dark",
+    "text": "#BC9A90",
+    "muted": "#9A786F",
+    "faint": "#7B5C53"
+  },
+  "vasikos-metochos": {
+    "ground": "#0A251A",
+    "reading": "#24081A",
+    "teaserFill": "#396F58",
+    "polarity": "dark",
+    "text": "#66AD8E",
+    "muted": "#448B6D",
+    "faint": "#236D51"
+  },
+  "o-tse-aftoktonise": {
+    "ground": "#251D17",
+    "reading": "#001629",
+    "teaserFill": "#3B2C21",
+    "polarity": "dark",
+    "text": "#B39C8B",
+    "muted": "#917B6A",
+    "faint": "#755F50"
+  },
+  "amyna-zonis": {
+    "ground": "#251D17",
+    "reading": "#85AAC4",
+    "teaserFill": "#3B2C21",
+    "polarity": "light",
+    "text": "#271608",
+    "muted": "#4B3728",
+    "faint": "#655041"
+  },
+  "nychterino-deltio": {
+    "ground": "#1C1D31",
+    "reading": "#001B1B",
+    "teaserFill": "#2B2B51",
+    "polarity": "dark",
+    "text": "#9C9FDA",
+    "muted": "#797CB4",
+    "faint": "#5D5F95"
+  },
+  "i-techni-tou-tromou": {
+    "ground": "#1F1D29",
+    "reading": "#27070B",
+    "teaserFill": "#5A576E",
+    "polarity": "dark",
+    "text": "#A09BBB",
+    "muted": "#7F7A99",
+    "faint": "#625D7B"
+  },
+  "faust": {
+    "ground": "#221F1A",
+    "reading": "#0B1800",
+    "teaserFill": "#474036",
+    "polarity": "dark",
+    "text": "#AB9F91",
+    "muted": "#877D6F",
+    "faint": "#6C6154"
+  },
+  "i-athina-tis-mias-diadromis": {
+    "ground": "#1E1F22",
+    "reading": "#1E1100",
+    "teaserFill": "#606267",
+    "polarity": "dark",
+    "text": "#9DA0A7",
+    "muted": "#7C7F86",
+    "faint": "#5F6269"
+  },
+  "istories-tou-kyriou-koiner": {
+    "ground": "#3A0C18",
+    "reading": "#001B10",
+    "teaserFill": "#6C0C2B",
+    "polarity": "dark",
+    "text": "#D98C98",
+    "muted": "#B56B77",
+    "faint": "#944E5A"
+  },
+  "istories-tis-allis-ochthis": {
+    "ground": "#1D1F23",
+    "reading": "#1D0A24",
+    "teaserFill": "#2B3036",
+    "polarity": "dark",
+    "text": "#989FA8",
+    "muted": "#777E86",
+    "faint": "#5C626B"
+  }
+}

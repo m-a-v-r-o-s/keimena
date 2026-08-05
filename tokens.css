@@ -1,0 +1,267 @@
+/* Hallmark · macrostructure: Catalogue · tone: austere/editorial · anchor hue: warm-red 33°
+ * theme: studied-DNA (source: url) · studied: yes
+ * source-url: https://press.stripe.com/an-elegant-puzzle  ·  secondary: https://mint.gg
+ * observed-fonts: Ivar Display + Ivar Headline + Ivar Text (one serif superfamily, 3 optical sizes)
+ * observed-canvas: #201819 warm near-black  ·  observed-text: #fff
+ * observed-per-book: --coverColor / --backgroundColor / --backgroundGradient (page recolours per book)
+ * observed-motion: transition .1–.5s ease-out; WebGL draggable shelf (NOT reproduced — see DESIGN.md §6)
+ * secondary-easing: cubic-bezier(.22,1,.36,1) + tracked labels .12–.22em (from mint.gg)
+ * rhythm: unknown (URL mode — CSS read, not rendered)
+ * Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V4
+ *
+ * Greek-first. Every colour below verified for WCAG AA against the canvas; see DECISIONS.md D6.
+ */
+
+:root {
+  /* ---- Canvas ------------------------------------------------------------
+   * Warm near-black, not grey-black and never #000. This is the corrected
+   * palette: the reference site's canvas is #201819, NOT the light beige the
+   * planning session assumed. Ours sits a touch deeper and warmer.
+   * The light-paper alternate is retained at the bottom of this file — the
+   * flip is two tokens, should the ink direction be rejected.
+   */
+  --color-ink-canvas:    oklch(20.8% 0.009 59.2);   /* #1B1714 page ground        */
+  --color-ink-raised:    oklch(24.3% 0.012 67.2);   /* #241F1A book faces, quotes */
+  --color-ink-recessed:  oklch(17.7% 0.005 17.6);   /* #131010 shelf shadow, wells*/
+
+  /* ---- Type on canvas ---- contrast vs canvas in comments ---------------- */
+  --color-text:          oklch(94.8% 0.013 82.4);   /* #F2EDE4  15.27:1  AA ✓ */
+  --color-text-muted:    oklch(73.9% 0.023 76.5);   /* #B3A99B   7.69:1  AA ✓ */
+  --color-text-faint:    oklch(60.5% 0.023 74.5);   /* #8A8073   4.59:1  AA ✓ */
+
+  /* ---- Accent ------------------------------------------------------------
+   * The single system accent: links, focus, the one primary CTA, "out now".
+   * NOTE: the light-palette oxblood #8C3A2B scores 2.34:1 here and is BANNED
+   * on the dark canvas. It survives only as a book accent (as a background,
+   * with --color-text on top, where it scores 6.54:1).
+   */
+  --color-accent:        oklch(64.0% 0.154 33.5);   /* #D9634A   4.95:1  AA ✓ */
+  --color-focus:         oklch(94.8% 0.013 82.4);   /* focus ring = full text tone, ≥3:1 */
+
+  /* ---- Paper -------------------------------------------------------------
+   * Printed stock, for the few things on this site that are made of paper
+   * rather than lit by the room: the author's poster, and the page blocks of
+   * the books (book-model.js PAGES, which is this same value).
+   *
+   * This is the ONE place the palette inverts, and it inverts honestly -- a
+   * sheet of paper in a dark room is lighter than the room. Everything set on
+   * it therefore takes ink, not text: --color-text on this stock is 1.19:1 and
+   * unreadable, which is exactly the trap a light surface sets in a dark
+   * system. The three inks below are measured against the stock, not against
+   * the canvas, and the accent is listed because it FAILS here -- the oxblood
+   * that carries links on the dark ground is 2.60:1 on paper and must never be
+   * used as ink. Its light-palette sibling #8C3A2B, banned on the canvas at
+   * 2.34:1, is the one that works here at 5.51:1.
+   */
+  --color-paper:         oklch(88.5% 0.023 82.0);   /* #E4DACA  the stock      */
+  --color-ink:           oklch(20.5% 0.010 55.0);   /* #1B1714  12.87:1  AA ✓  */
+  --color-ink-soft:      oklch(35.5% 0.014 62.0);   /* #4A4038   7.29:1  AA ✓  */
+  --color-ink-faint:     oklch(45.0% 0.017 66.0);   /* #5A4F45   5.75:1  AA ✓  */
+
+  /* ---- Structure --------------------------------------------------------- */
+  --color-rule:          oklch(94.8% 0.013 82.4 / 0.16);
+  --color-rule-strong:   oklch(94.8% 0.013 82.4 / 0.32);
+  --rule-hairline:       1px;
+
+  /* The printed sheet the room is papered with: how big one tile of
+   * /textures/background.webp is laid out on screen. A LENGTH, never a
+   * percentage or cover/contain -- the sheet is square and the viewport is
+   * not, so scaling it to the window would size a drawn column by the reader's
+   * monitor. At 512px the tile is 1:1 on a 2x screen against the published
+   * sheet, and a laptop viewport holds about three of them across. */
+  --ground-tile:         512px;
+
+  /* One book's row in the stack. A token because two rules need to agree on it:
+   * the slot's own height, and the empty row the stack opens with. */
+  --slot-h:              clamp(128px, 15vw, 216px);
+
+  /* ---- Per-book colour, reading view (Colour & Type Redesign) ------------
+   * Every book carries THREE colours, matching press.stripe.com's own model:
+   * an object colour (`accent` in books.json, unchanged), a room colour
+   * (`--reading-ground`), and now a TEXT colour split into three contrast
+   * tiers -- `--book-text` / `--book-muted` / `--book-faint`. All of it is
+   * derived and gated in tools/contrast.py and emitted to
+   * content/grounds.json; Catalogue.jsx publishes it as custom properties
+   * while a book is open. See COLOR-REDESIGN.md for the full derivation.
+   *
+   * The SHELF ground does not change per book — it stays --color-ink-canvas at
+   * every scroll depth, exactly as the reference does. Colour arrives with the
+   * object, not with the room.
+   *
+   * Gate (tools/contrast.py, all hard): text-tier ≥ 7:1 (AAA), muted-tier ≥
+   * 4.5:1 (AA), faint-tier ≥ 3:1 (UI), object-on-reading ≥ 1.5:1. Accents stay
+   * ≥ OKLCH L 38%.
+   */
+
+  /* ---- Type families -----------------------------------------------------
+   * The reference runs ONE serif superfamily across three optical sizes and no
+   * sans at all. We reproduce that discipline with Greek-capable faces:
+   * Literata carries a real opsz axis (7..72), which is the open equivalent of
+   * Ivar Text/Headline/Display. GFS Didot supplies the Greek Didone display
+   * voice that no Latin face can. Mono is our one addition — it earns its place
+   * on catalogue metadata and echoes mint.gg's tracked-label register.
+   */
+  --font-display: "GFS Didot", "Literata", Georgia, serif;
+  --font-body:    "Literata", Georgia, serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+  /* GFS Didot ships weight 400 only, no italic. Never request bold or italic
+   * from --font-display; the browser synthesises them and smears the Didone
+   * hairlines. Display hierarchy = size + colour + tracking. See DESIGN.md §3. */
+  --weight-display: 400;
+  --weight-body:    400;
+  /* Reading-view prose only (.detail__body) -- Literata is a variable font
+   * loaded through next/font, so the step costs no extra bytes. It compensates
+   * for the Colour & Type Redesign's per-book text tiers, which trade the old
+   * flat 15.27:1 cream-on-canvas for contrast as low as 7:1 (title) and 4.5:1
+   * (synopsis) so the words can carry the book's own hue. A 400-weight serif
+   * at reading size is what turns "still AA" into "reads thin." */
+  --weight-body-md: 500;
+  /* The held-book teaser only -- the heaviest type on the site, and the one
+   * hardcoded font-weight this file used to carry. */
+  --weight-body-b:  700;
+
+  /* ---- Optical sizing (Literata opsz axis) -------------------------------
+   * Only opsz-text is live: Literata never renders larger than reading-body
+   * size on this page (the display voice is GFS Didot, a static face with no
+   * opsz axis at all), so a "subhead" or "display" grade would have nothing
+   * to apply to. Add the next step back only once a Literata role actually
+   * needs it -- an unused axis value is worse than none, see
+   * COLOR-REDESIGN.md §5 finding 1. */
+  --opsz-text:    12;
+
+  /* ---- Type scale --------------------------------------------------------
+   * Fluid, echoing the reference's calc(19px + .75vw) body step.
+   */
+  --text-display:   clamp(2.75rem, 6vw,   5.5rem);
+  --text-display-s: clamp(2rem,    4vw,   3.5rem);
+  --text-2xl:       clamp(1.75rem, 3vw,   2.75rem);
+  --text-xl:        clamp(1.5rem,  2.4vw, 2.25rem);
+  --text-lg:        1.3125rem;                        /* 21px — reference ramp */
+  --text-base:      calc(1.0625rem + 0.15vw);
+  --text-sm:        0.9375rem;
+  --text-xs:        0.8125rem;
+
+  /* ---- Line height & measure --------------------------------------------
+   * Greek diacritics need vertical air: leading runs ~0.06 above a Latin
+   * default at display sizes so the tonos never collides with the descender.
+   */
+  --leading-display: 1.06;
+  --leading-head:    1.18;
+  --leading-body:    1.75;
+  /* --leading-body is tuned for --measure-read (65ch) -- wide lines want more
+   * air between them. The reading view's column is far narrower (46ch,
+   * .detail__body), where 1.75 spaces short lines apart until they read as a
+   * list rather than a paragraph. 1.6 recovers that without giving up the
+   * Greek diacritic clearance --leading-body exists for in the first place --
+   * the reference itself runs 1.5, but ours carries tonoi 1.5 does not. */
+  --leading-narrow:  1.6;
+  --measure-read:    65ch;
+  --measure-page:    1280px;   /* reference main column */
+  --measure-wide:    2200px;   /* reference outer bound */
+  --page-margin:     calc(10px + 1vw);  /* reference --bodyMargin */
+
+  /* ---- Tracking ----------------------------------------------------------
+   * Size-specific and negative at display sizes; a Didone clots when tracked
+   * tight small and falls apart tracked loose large. Never set globally.
+   */
+  /* GFS Didot is a high-contrast Didone with ONE weight, so tracking is the
+   * main optical control available. It must move with size, never globally:
+   * the hairlines separate and the word falls apart when a large setting is
+   * tracked loose, and the thick stems clot into a dark band when a small one
+   * is tracked tight. Values run from tight at display to slightly open at
+   * caption size. */
+  --track-display-xl: -0.022em;  /* featured title, 44px and up */
+  --track-display:    -0.015em;  /* book page h1                */
+  --track-head:       -0.008em;  /* section heads               */
+  --track-display-sm:  0.006em;  /* book-cover titles, ~16-24px */
+  --track-body:        0;
+  --track-meta:        0.14em;   /* mint.gg register: tracked-out mono labels */
+
+  /* ---- Spacing — 4pt scale ----------------------------------------------- */
+  --space-2xs: 0.25rem;
+  --space-xs:  0.5rem;
+  --space-sm:  0.75rem;
+  --space-md:  1rem;
+  --space-lg:  1.5rem;
+  --space-xl:  2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+  --space-section: clamp(6rem, 14vh, 11rem);
+  --space-section-mobile: clamp(3rem, 8vw, 6rem);
+
+  /* ---- Radius ------------------------------------------------------------
+   * Books are objects, not app cards. 4px, and that is the ceiling.
+   */
+  --radius-book: 4px;
+  --radius-ui:   2px;
+
+  /* ---- Motion ------------------------------------------------------------
+   * Durations from the reference (.1–.5s, ease-out). The settle easing is
+   * easeOutQuint, lifted from mint.gg. No perpetual loops — see DESIGN.md §6.
+   */
+  --dur-instant: 0.1s;
+  --dur-fast:    0.2s;
+  --dur-base:    0.3s;
+  --dur-slow:    0.5s;
+  --dur-reveal:  0.6s;
+
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in:     cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --stagger: 80ms;
+  --parallax-rate: 0.92;
+
+  /* ---- Book geometry -----------------------------------------------------
+   * A book is turned so its spine faces the viewer. In CSS a positive rotateY
+   * brings the LEFT edge forward, which is exactly where the spine lives -- so
+   * the spine reads and the fore-edge correctly stays hidden.
+   *
+   * Visible spine width is thickness * sin(tilt). At the first draft's 10deg /
+   * 14px that resolved to ~2.4px: invisible, and the object read as a skewed
+   * rectangle rather than a turned book. 16deg / 30px gives ~8px of spine,
+   * which is what makes it read as an object with mass.
+   */
+  --tilt-book: 16deg;
+  --book-thickness: 30px;
+  --book-perspective: 1100px;
+
+  /* Shadows are tinted to the warm ink, never pure black -- a neutral-black
+   * shadow on a warm ground reads as grime. */
+  --shadow-book: 0 26px 50px -22px oklch(12% 0.02 40 / 0.78),
+    0 6px 16px -8px oklch(12% 0.02 40 / 0.55);
+  --shadow-book-hover: 0 16px 34px -18px oklch(12% 0.02 40 / 0.82),
+    0 4px 12px -6px oklch(12% 0.02 40 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 0.01ms;
+    --dur-fast:    0.01ms;
+    --dur-base:    0.01ms;
+    --dur-slow:    0.01ms;
+    --dur-reveal:  0.01ms;
+    --stagger:     0ms;
+    --tilt-book:   0deg;
+    --parallax-rate: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * ALTERNATE: light-paper direction (the planning session's original palette).
+ * Not active. Retained so the canvas direction is a two-token flip rather than
+ * a rebuild, if the ink direction is rejected on review.
+ * If enabled, --color-accent MUST return to the deep oxblood oklch(45.7% 0.115
+ * 32.2) — the light accent #D9634A scores only 2.6:1 on paper and fails AA.
+ *
+ * :root {
+ *   --color-ink-canvas:   oklch(94.0% 0.017 84.0);   #F4EFE6
+ *   --color-ink-raised:   oklch(96.6% 0.011 85.0);   #FAF6EF
+ *   --color-ink-recessed: oklch(90.6% 0.017 82.0);   #EBE4D8
+ *   --color-text:         oklch(19.6% 0.008 62.0);   #1C1A17
+ *   --color-text-muted:   oklch(41.4% 0.017 76.0);   #5C564C
+ *   --color-text-faint:   oklch(58.0% 0.019 77.0);   #8A8478
+ *   --color-accent:       oklch(45.7% 0.115 32.2);   #8C3A2B
+ * }
+ * ------------------------------------------------------------------------- */

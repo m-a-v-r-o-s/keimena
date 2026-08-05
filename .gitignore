@@ -1,0 +1,21 @@
+node_modules/
+.next/
+out/
+.env*
+.DS_Store
+*.log
+.screenshots/profile/
+.screenshots/*.mjs.bak
+__pycache__/
+
+# Local build/session notes -- not for the public repo
+.claude/
+.hallmark/
+DECISIONS.md
+HANDOFF.md
+HANDOFF-*.md
+PLAN.md
+REDESIGN.md
+LIGHT_PLAN.md
+COLOR-REDESIGN.md
+LLM_GUIDELINES.md

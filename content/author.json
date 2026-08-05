@@ -1,0 +1,112 @@
+{
+  "id": "petros-markaris",
+  "name_el": "Πέτρος Μάρκαρης",
+  "name_en": "Petros Markaris",
+  "birth_name": "Bedros Markarian",
+  "born": {
+    "year": 1937,
+    "place_el": "Κωνσταντινούπολη",
+    "place_en": "Constantinople (Istanbul)",
+    "note_el": "Γεννήθηκε στη Χάλκη, από Αρμένιο πατέρα και Ελληνίδα μητέρα.",
+    "note_en": "Born on Halki, to an Armenian father and a Greek mother."
+  },
+  "languages_translated": {
+    "count": 20,
+    "source": "keimenabooks.gr author page, retrieved 2026-07-30",
+    "conflict_note": "Older publisher jackets and the Onassis Foundation bio (which lists titles only through Ληξιπρόθεσμα δάνεια, 2010) say fourteen. The figure grew over time; 20 is the current publisher's number. Do not print both."
+  },
+  "series_anniversary": {
+    "hook_el": "30 χρόνια Χαρίτος",
+    "hook_en": "30 years of Charitos",
+    "basis": "Νυχτερινό δελτίο (1995) → 2025",
+    "editorial_use": "Homepage eyebrow above the shelf and the series page header."
+  },
+  "timeline": [
+    {
+      "year": 1937,
+      "el": "Γεννιέται στην Κωνσταντινούπολη.",
+      "en": "Born in Constantinople."
+    },
+    {
+      "year": null,
+      "period": "1950s–60s",
+      "el": "Φοιτά στο αυστριακό λύκειο St. Georg της Πόλης· σπουδάζει οικονομικά στη Βιέννη και τη Στουτγάρδη.",
+      "en": "Educated at St. George's Austrian High School in Istanbul; studies economics in Vienna and Stuttgart."
+    },
+    {
+      "year": 1964,
+      "el": "Εγκαθίσταται μόνιμα στην Αθήνα.",
+      "en": "Settles permanently in Athens."
+    },
+    {
+      "year": 1965,
+      "el": "Πρώτο θεατρικό έργο: «Η ιστορία του Αλή Ρέτζο».",
+      "en": "First play: The Story of Ali Retzo."
+    },
+    {
+      "year": 1976,
+      "el": "Εργάζεται ως ελεύθερος συγγραφέας.",
+      "en": "Begins working as a freelance writer."
+    },
+    {
+      "year": null,
+      "period": "1980s–90s",
+      "el": "Συνεργάζεται με τον Θόδωρο Αγγελόπουλο σε σενάρια, μεταξύ αυτών «Το μετέωρο βήμα του πελαργού». Μεταφράζει Μπρεχτ, Βέντεκιντ, Σνίτσλερ και τον «Φάουστ» του Γκαίτε.",
+      "en": "Writes screenplays with Theo Angelopoulos, among them The Suspended Step of the Stork. Translates Brecht, Wedekind, Schnitzler, and both parts of Goethe's Faust."
+    },
+    {
+      "year": 1995,
+      "el": "«Νυχτερινό δελτίο»: πρώτη εμφάνιση του αστυνόμου Κώστα Χαρίτου.",
+      "en": "Night Bulletin introduces Inspector Kostas Charitos.",
+      "emphasis": true
+    },
+    {
+      "year": 2008,
+      "el": "Πρόεδρος του Εθνικού Κέντρου Βιβλίου (Ε.ΚΕ.ΒΙ.) έως το 2009.",
+      "en": "President of the National Book Centre of Greece until 2009."
+    },
+    {
+      "year": 2010,
+      "el": "Ξεκινά η «Τριλογία της Κρίσης» — η σειρά γίνεται χρονικό της ελληνικής κρίσης.",
+      "en": "The Crisis Trilogy begins; the series becomes a chronicle of the Greek crisis.",
+      "emphasis": true
+    },
+    {
+      "year": 2013,
+      "el": "Μετάλλιο Γκαίτε.",
+      "en": "Awarded the Goethe Medal."
+    },
+    {
+      "year": 2014,
+      "el": "Ομοσπονδιακός Σταυρός της Αξίας της Γερμανίας.",
+      "en": "Awarded the German Federal Cross of Merit."
+    },
+    {
+      "year": 2026,
+      "el": "«Όλα για την ανάπτυξη» — ο Χαρίτος στην Αθήνα των δύο ταχυτήτων.",
+      "en": "All for Development — Charitos in the two-speed city.",
+      "emphasis": true
+    }
+  ],
+  "awards": [
+    {
+      "year": 2013,
+      "el": "Μετάλλιο Γκαίτε",
+      "en": "Goethe Medal",
+      "for_en": "distinguished contribution to the German language and international cultural relations",
+      "source": "Wikipedia (EN), retrieved 2026-07-30"
+    },
+    {
+      "year": 2014,
+      "el": "Ομοσπονδιακός Σταυρός της Αξίας",
+      "en": "German Federal Cross of Merit (Bundesverdienstkreuz)",
+      "source": "Wikipedia (EL), retrieved 2026-07-30"
+    }
+  ],
+  "roles_el": ["μυθιστοριογράφος", "θεατρικός συγγραφέας", "σεναριογράφος", "μεταφραστής"],
+  "roles_en": ["novelist", "playwright", "screenwriter", "translator"],
+  "bio_el_source": "Publisher's own author biography, supplied 2026-07-31. Printed verbatim: this is the imprint's copy about its author, not ours to re-word. Note it credits Γαβριηλίδης for the 1995 first edition, which is correct history and is not a mistake to fix.",
+  "bio_el": "Ο Πέτρος Μάρκαρης γεννήθηκε στην Κωνσταντινούπολη το 1937. Σπούδασε οικονομικές επιστήμες στην Αυστρία και εγκαταστάθηκε στην Αθήνα το 1964. Εμφανίστηκε στα ελληνικά γράμματα το 1965 με το θεατρικό έργο Η ιστορία του Αλή Ρέτζο. Μετέφρασε σημαντικά έργα της παγκόσμιας λογοτεχνίας και συνεργάστηκε με τον Θόδωρο Αγγελόπουλο σε σενάρια ταινιών (Το Μετέωρο Βήμα του Πελαργού, Το Βλέμμα του Οδυσσέα, Μια Αιωνιότητα και Μια Μέρα, Η Σκόνη του Χρόνου κ.ά.). Το 1995 κυκλοφόρησε το πρώτο του αστυνομικό μυθιστόρημα Νυχτερινό Δελτίο από τις εκδόσεις Γαβριηλίδης. Μετέφρασε, για πρώτη φορά στην Ελλάδα, ολόκληρο τον Φάουστ του Γκαίτε, καθώς και την πρώτη γραφή του Φάουστ. Έχει εκδώσει διηγήματα, δοκίμια και θεατρικά έργα και έχει τιμηθεί με σημαντικά διεθνή λογοτεχνικά βραβεία για το έργο του. Τα βιβλία του έχουν μεταφραστεί σε είκοσι γλώσσες.",
+  "bio_short_el": "Ο Πέτρος Μάρκαρης γεννήθηκε το 1937 στην Κωνσταντινούπολη και ζει στην Αθήνα από το 1964. Μετέφρασε Μπρεχτ και τον «Φάουστ» του Γκαίτε, έγραψε σενάρια με τον Θόδωρο Αγγελόπουλο, και από το 1995 χαρτογραφεί την Αθήνα μέσα από τον αστυνόμο Κώστα Χαρίτο.",
+  "bio_short_en": "Petros Markaris was born in Constantinople in 1937 and has lived in Athens since 1964. He translated Brecht and Goethe's Faust, wrote screenplays with Theo Angelopoulos, and since 1995 has mapped Athens through Inspector Kostas Charitos."
+}

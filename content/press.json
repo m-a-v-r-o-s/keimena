@@ -1,0 +1,948 @@
+{
+  "_meta": {
+    "compiled": "2026-08-05",
+    "source": "keimenabooks.gr per-title product pages — the link block above the Αγορά button and the reviews slider below the synopsis",
+    "method": "tools/press.mjs — harvest, then GET every URL and record status, final URL, <title>",
+    "checked": "2026-08-05",
+    "rules": [
+      "byline/outlet/date/quote are copied from a source or null. Never inferred.",
+      "dead:true records are kept as evidence and never rendered.",
+      "The generic https://keimenabooks.gr/απόσπασμα/ popup trigger is not a per-book URL and is never recorded as one.",
+      "roundup links (listicles that mention the title once) are harvested and kept in this file, but pressFor() in lib/content.js filters them out of what actually renders by default."
+    ],
+    "http_upgrades": [
+      {
+        "from": "http://serpico.gr/toposima-petros-markaris-ilektrikos-audio/",
+        "to": "https://serpico.gr/toposima-petros-markaris-ilektrikos-audio/"
+      },
+      {
+        "from": "http://soundcloud.com/user-46820274-209698857/ti-fasi-istories-tis-allis-oxthis-mesa-apo-ti-logotexnia",
+        "to": "https://soundcloud.com/user-46820274-209698857/ti-fasi-istories-tis-allis-oxthis-mesa-apo-ti-logotexnia"
+      }
+    ],
+    "dead_excerpts": [
+      {
+        "book": "to-kinima-tis-aftoktonias",
+        "kind": "issuu",
+        "url": "https://issuu.com/info-keimenabooks/docs/markarhs_to_kinhma_thw_autoktonias_2021",
+        "status": 404
+      },
+      {
+        "book": "o-fonos-einai-chrima",
+        "kind": "issuu",
+        "url": "https://issuu.com/info-keimenabooks/docs/markarhs_o_fonos_2020_issuu",
+        "status": 404
+      },
+      {
+        "book": "i-epochi-tis-ypokrisias",
+        "kind": "issuu",
+        "url": "https://issuu.com/info-keimenabooks/docs/ilovepdf_merged_13_",
+        "status": 404
+      },
+      {
+        "book": "palia-poly-palia",
+        "kind": "issuu",
+        "url": "https://issuu.com/info-keimenabooks/docs/markaris_palia_poly_palia_2022_issuu",
+        "status": 404
+      },
+      {
+        "book": "amyna-zonis",
+        "kind": "issuu",
+        "url": "https://issuu.com/info-keimenabooks/docs/markarhs_amyna_zwnhs_issuu",
+        "status": 404
+      },
+      {
+        "book": "nychterino-deltio",
+        "kind": "issuu",
+        "url": "https://issuu.com/info-keimenabooks/docs/markarhs_nyxterino_2020_issuu",
+        "status": 404
+      },
+      {
+        "book": "i-techni-tou-tromou",
+        "kind": "issuu",
+        "url": "https://issuu.com/info-keimenabooks/docs/markaris_dihghmata_2021",
+        "status": 404
+      },
+      {
+        "book": "faust",
+        "kind": "issuu",
+        "url": "https://issuu.com/info-keimenabooks/docs/faust_issuu_2020-merged",
+        "status": 404
+      },
+      {
+        "book": "istories-tis-allis-ochthis",
+        "kind": "issuu",
+        "url": "https://issuu.com/info-keimenabooks/docs/tourkika_dihghmata_2022",
+        "status": 404
+      }
+    ]
+  },
+  "byBook": {
+    "ola-gia-tin-anaptyxi": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2026/07/Markarhs-Anaptyksh-2027.pdf"
+      },
+      "links": []
+    },
+    "i-apati-einai-to-mellon": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2026/06/Markarhs-Mellon-2025-re-print-1.pdf"
+      },
+      "links": [
+        {
+          "url": "https://eleftherostypos.gr/politismos/petros-markaris-ston-e-t-i-moni-axia-pou-kyriarchei-pagkosmios-einai-to-chrima",
+          "label_el": "Συνέντευξη στη Γιούλη Τσακάλου, Ελεύθερος Τύπος",
+          "byline": "Συνέντευξη στη Γιούλη Τσακάλου",
+          "outlet": "Ελεύθερος Τύπος",
+          "kind": "interview",
+          "medium": "text",
+          "date": null,
+          "quote": null,
+          "target_title": "Just a moment...",
+          "status": 403,
+          "final_url": null,
+          "dead": true,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://exostis.gr/%cf%80%ce%ad%cf%84%cf%81%ce%bf%cf%82-%ce%bc%ce%ac%cf%81%ce%ba%ce%b1%cf%81%ce%b7%cf%82-%ce%ad%cf%87%cf%89-%ce%bc%ce%b9%ce%b1-%ce%b1%ce%bd%cf%84%ce%b9%cf%80%ce%ac%ce%b8%ce%b5%ce%b9%ce%b1-%ce%b3%ce%b9/#google_vignette",
+          "label_el": "Συνέντευξη στον Δημήτρη Πλιάκα, Ο Εξώστης",
+          "byline": "Συνέντευξη στον Δημήτρη Πλιάκα",
+          "outlet": "Ο Εξώστης",
+          "kind": "interview",
+          "medium": "text",
+          "date": "2025-12-16",
+          "quote": null,
+          "target_title": "Πέτρος Μάρκαρης: Έχω μια αντιπάθεια για τους ιδιοφυείς και τους \"περίεργους\" ντετέκτιβ",
+          "status": 200,
+          "final_url": "https://exostis.gr/%cf%80%ce%ad%cf%84%cf%81%ce%bf%cf%82-%ce%bc%ce%ac%cf%81%ce%ba%ce%b1%cf%81%ce%b7%cf%82-%ce%ad%cf%87%cf%89-%ce%bc%ce%b9%ce%b1-%ce%b1%ce%bd%cf%84%ce%b9%cf%80%ce%ac%ce%b8%ce%b5%ce%b9%ce%b1-%ce%b3%ce%b9/",
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://m.popaganda.gr/art/books/vivliografies/i-apati-einai-to-mellon-o-petros-markaris-se-exairetiki-forma/",
+          "label_el": null,
+          "byline": "Γιώργος Βαϊλάκης",
+          "outlet": "Popaganda",
+          "kind": "review",
+          "medium": "text",
+          "date": null,
+          "quote": "Ο Πέτρος Μάρκαρης σε εξαιρετική φόρμα.",
+          "target_title": "«Η απάτη είναι το μέλλον»: Ο Πέτρος Μάρκαρης σε εξαιρετική φόρμα",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.oanagnostis.gr/vivlia-tis-giortes-10-12-epilegmena-astynomika-mythistorimata/",
+          "label_el": null,
+          "byline": "Πάνος Ιωαννίδης",
+          "outlet": "Αναγνώστης",
+          "kind": "review",
+          "medium": "text",
+          "date": "2025-12-21",
+          "quote": "Θέτει εύστοχα μια σειρά από κρίσιμα ερωτήματα που αφορούν τους όρους χρήσης της τεχνολογίας, καθώς και το αν ο άνθρωπος γίνεται υπηρέτης της ή εξακολουθεί να είναι κύριος της.",
+          "target_title": "Βιβλία για τις γιορτές (10) - 12 επιλεγμένα Αστυνομικά Μυθιστορήματα (από τον Πάνο Ιωαννίδη) - ΠΕΡΙΟΔΙΚΟ Ο ΑΝΑΓΝΩΣΤΗΣ ΓΙΑ ΤΟ ΒΙΒΛΙΟ ΚΑΙ ΤΙΣ ΤΕΧΝΕΣ",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        }
+      ]
+    },
+    "i-via-tis-apotychias": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2024/07/Markarhs-Via-2024.pdf"
+      },
+      "links": [
+        {
+          "url": "https://www.ertecho.gr/radio/deftero/show/se-proto-prosopo/podcast/780702/petros-markaris-paraskeyi-20-septemvriou-2024/",
+          "label_el": "Δημήτρης Μεϊδάνης, Δεύτερο Πρόγραμμα ΕΡΤ",
+          "byline": "Δημήτρης Μεϊδάνης",
+          "outlet": "Δεύτερο Πρόγραμμα ΕΡΤ",
+          "kind": "interview",
+          "medium": "audio",
+          "date": null,
+          "quote": null,
+          "target_title": "404 - Page not found - ERT εcho",
+          "status": 404,
+          "final_url": null,
+          "dead": true,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.amna.gr/mobile/article/852881/To-aimatiro-fasma-tou-antagonismou-kai-tou-fthonou---To-kainourgio-muthistorima-tou-Petrou-Markari-I-bia-tis-apotuchias?fbclid=IwY2xjawF7YidleHRuA2FlbQIxMAABHXBzAIEIegXXA7qNjhzp75XGO4v4qtXnReKBbM2TcmU1dN7EL5IebyTVaQ_aem_AA9iy9s-y3zA-OjIUmZ-Xw",
+          "label_el": null,
+          "byline": "Βαγγέλης Χατζηβασιλείου",
+          "outlet": "ΑΠΕ-ΜΠΕ",
+          "kind": "review",
+          "medium": "text",
+          "date": null,
+          "quote": "Ο Μάρκαρης αποδεικνύει όχι μόνο την κοινωνική μα και τη συγγραφική του εγρήγορση.",
+          "target_title": "Αθηναϊκό - Μακεδονικό πρακτορείο ειδήσεων",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.kathimerini.gr/culture/563170567/anthropistikes-spoydes-meta-fonon/",
+          "label_el": null,
+          "byline": "Μαρία Αθανασίου",
+          "outlet": "Η Καθημερινή",
+          "kind": "review",
+          "medium": "text",
+          "date": "2024-08-13",
+          "quote": "Ασκεί πολιτική κριτική και θίγει ζητήματα κοινωνικά και οικουμενικά μέσα από μια νέα αστυνομική περιπέτεια.",
+          "target_title": "Ανθρωπιστικές σπουδές μετά φόνων | Η ΚΑΘΗΜΕΡΙΝΗ",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.lifo.gr/culture/vivlio/100-biblia-gia-kalokairi-o-megalos-odigos-tis-lifo-gia-tis-diakopes",
+          "label_el": null,
+          "byline": null,
+          "outlet": "LIFO",
+          "kind": "roundup",
+          "medium": "text",
+          "date": "2024-07-30",
+          "quote": "Στις προτάσεις της LIFO για το καλοκαίρι.",
+          "target_title": "100 βιβλία για το καλοκαίρι: Ο μεγάλος οδηγός της LiFO για τις διακοπές | LiFO",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.tanea.gr/print/2024/06/29/greece/sto-oikonomikolfpanepistimiolfyparxei-nekros/",
+          "label_el": null,
+          "byline": "Δημήτρης Δουλγερίδης",
+          "outlet": "ΤΑ ΝΕΑ",
+          "kind": "review",
+          "medium": "text",
+          "date": null,
+          "quote": "Ο Κάρλο Λουκαρέλι συμπεριέλαβε τον ήρωα του Πέτρου Μάρκαρη, αστυνόμο Κώστα Χαρίτο, στα πρώτα ονόματα του είδους.",
+          "target_title": "«Στο Οικονομικό Πανεπιστήμιο υπάρχει νεκρός» - ΤΑ ΝΕΑ",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://m.popaganda.gr/art/books/20-vivlia-astynomikis-logotechnias-gia-to-kalokairi/",
+          "label_el": null,
+          "byline": "Γιώργος Βαϊλάκης",
+          "outlet": "Popaganda",
+          "kind": "roundup",
+          "medium": "text",
+          "date": null,
+          "quote": "Ο Πέτρος Μάρκαρης, μαζί με τον Καμιλλέρι και τον Μονταλμπάν, είναι συνδιαμορφωτής του «μεσογειακού αστυνομικού μυθιστορήματος» και ένας από τους κορυφαίους σύγχρονους συγγραφείς αστυνομικής λογοτεχνίας – σε παγκόσμια κλίμακα.",
+          "target_title": "20 βιβλία αστυνομικής λογοτεχνίας για το καλοκαίρι",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        }
+      ]
+    },
+    "i-exegersi-ton-karyatidon": {
+      "excerpt": null,
+      "links": [
+        {
+          "url": "https://www.andro.gr/empneusi/20-new-books-summer-2/",
+          "label_el": null,
+          "byline": "Διονύσης Μαρίνος",
+          "outlet": "Andro",
+          "kind": "roundup",
+          "medium": "text",
+          "date": "2023-07-20",
+          "quote": "Κάθε νέο μυθιστόρημα του Πέτρου Μάρκαρη είναι γεγονός.",
+          "target_title": "Τα 20 νέα βιβλία του καλοκαιριού που θα πάρετε στις διακοπές | Andro",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        }
+      ]
+    },
+    "to-kinima-tis-aftoktonias": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2022/10/Markarhs-to-kinhma-thw-autoktonias-2021.pdf"
+      },
+      "links": [
+        {
+          "url": "https://www.ert.gr/radiofono/o-petros-markaris-me-ta-podia-mechri-tin-alitheia-sto-deytero-programma-103-7-26-03-2022-18-00/",
+          "label_el": "Νικολακοπούλου, Χριστακάκη - ΕΡΤ",
+          "byline": "Νικολακοπούλου, Χριστακάκη",
+          "outlet": "ΕΡΤ",
+          "kind": "interview",
+          "medium": "text",
+          "date": null,
+          "quote": null,
+          "target_title": "Page not found | ert.gr",
+          "status": 404,
+          "final_url": null,
+          "dead": true,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.athinorama.gr/plus/3003565/petros-markaris-simera-to-na-eisai-antiemboliastis-simainei-na-eisai-antisustimikos-opos-legame-palia-zito-pou-kaikame/",
+          "label_el": "Παύλος Μεθενίτης - Αθηνόραμα",
+          "byline": "Παύλος Μεθενίτης",
+          "outlet": "Αθηνόραμα",
+          "kind": "interview",
+          "medium": "text",
+          "date": "2022-04-09",
+          "quote": null,
+          "target_title": "Πέτρος Μάρκαρης: \"Σήμερα το να είσαι αντιεμβολιαστής... - Athinorama.gr",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://athina984.gr/2022/02/21/to-kinima-tis-aytoktonias-toy-petroy-markari/",
+          "label_el": null,
+          "byline": "Κωνσταντίνος Μοστράτος",
+          "outlet": "Αθήνα 98,4",
+          "kind": "review",
+          "medium": "text",
+          "date": "2022-02-21",
+          "quote": "Η πολιτική και η νέα πραγματικότητα της πανδημίας συναντούν το σύγχρονο ελληνικό αστυνομικό μυθιστόρημα.",
+          "target_title": "«Το κίνημα της αυτοκτονίας» του Πέτρου Μάρκαρη – Αθήνα 9,84",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.efsyn.gr/tehnes/ekdoseis-biblia/o-logos-stoys-syggrafeis/333331_i-anatreptiki-parembasi-toy-markari",
+          "label_el": null,
+          "byline": "Μικέλα Χαρτουλάρη",
+          "outlet": "ΕΦΣΥΝ",
+          "kind": "review",
+          "medium": "text",
+          "date": "2022-02-23",
+          "quote": "Ο Μάρκαρης φάνηκε προφητικός φέρνοντας στο προσκήνιο τα συνωμοσιολογικά επιχειρήματα των αντιεμβολιαστών.",
+          "target_title": "Η ανατρεπτική παρέμβαση του Μάρκαρη",
+          "status": 200,
+          "final_url": "https://www.efsyn.gr/nisides/o-logos-stoys-syggrafeis/333331_i-anatreptiki-parembasi-toy-markari/",
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.epohi.gr/article/42995/ena-politiko-kinhma-aytothysias",
+          "label_el": null,
+          "byline": "Μανώλης Πιμπλής",
+          "outlet": "Η εποχή",
+          "kind": "review",
+          "medium": "text",
+          "date": "2022-04-17",
+          "quote": "Ο Πέτρος Μάρκαρης έχει ένα σπουδαίο χάρισμα: με πολύ απλά υλικά, σχεδόν απλοϊκά, χτίζει αστυνομικά μυθιστορήματα που έχουν από πίσω βαθύ στοχασμό για την κοινωνία και την πολιτική.",
+          "target_title": "Ένα πολιτικό κίνημα αυτοθυσίας | Εφημερίδα η Εποχή",
+          "status": 200,
+          "final_url": "https://epohi.gr/articles/ena-politiko-kinhma-aytothysias/",
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.kathimerini.gr/culture/books/561663163/o-astynomos-charitos-emvoliazetai-kai-lynei-nea-mystiria/",
+          "label_el": null,
+          "byline": "Σάκης Ιωαννίδης",
+          "outlet": "Καθημερινή",
+          "kind": "review",
+          "medium": "text",
+          "date": "2022-01-11",
+          "quote": "Ο πεπειραμένος συγγραφέας δανείζεται τη ρητορική των ακραίων αντιεμβολιαστών και των συνωμοσιολόγων και ωθεί τους χαρακτήρες του στα άκρα.",
+          "target_title": "Ο αστυνόμος Χαρίτος εμβολιάζεται και λύνει νέα μυστήρια | Η ΚΑΘΗΜΕΡΙΝΗ",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        }
+      ]
+    },
+    "o-fonos-einai-chrima": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2022/11/Markarhs-o-fonos-2020-ISSUU.pdf"
+      },
+      "links": [
+        {
+          "url": "https://www.youtube.com/watch?v=GB2IxCjmmeA",
+          "label_el": "Λένα Αρώνη, ArtWeek",
+          "byline": "Λένα Αρώνη",
+          "outlet": "ArtWeek",
+          "kind": "interview",
+          "medium": "video",
+          "date": null,
+          "quote": null,
+          "target_title": "ΠΕΤΡΟΣ ΜΑΡΚΑΡΗΣ - YouTube",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.ertecho.gr/radio/deftero/show/me-ta-podia-mexri-tin-alitheia/ondemand/75026/me-ta-podia-mexri-tin-alitheia-o-petros-markaris-deytero-programma-ellinikis-radiofonias/",
+          "label_el": "Νικολακοπούλου, Χριστακάκη, ΕΡΤ",
+          "byline": "Νικολακοπούλου, Χριστακάκη",
+          "outlet": "ΕΡΤ",
+          "kind": "interview",
+          "medium": "audio",
+          "date": null,
+          "quote": null,
+          "target_title": "404 - Page not found - ERT εcho",
+          "status": 404,
+          "final_url": null,
+          "dead": true,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.lifo.gr/culture/vivlio/petros-markaris-otan-teleiosei-i-pandimia-oi-neoi-tha-sygkrotisoyn-ena-syghrono",
+          "label_el": "Γιάννης Πανταζόπουλος, LIFO",
+          "byline": "Γιάννης Πανταζόπουλος",
+          "outlet": "LIFO",
+          "kind": "interview",
+          "medium": "text",
+          "date": "2021-01-23",
+          "quote": null,
+          "target_title": "Πέτρος Μάρκαρης: «Όταν τελειώσει η πανδημία, οι νέοι θα συγκροτήσουν ένα σύγχρονο προλεταριάτο» | LiFO",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.avgi.gr/tehnes/367075_einai-aparaititi-i-politikopoiisi-ton-politon",
+          "label_el": "Πόλυ Κρημνιώτη, Η ΑΥΓΗ",
+          "byline": "Πόλυ Κρημνιώτη",
+          "outlet": "Η ΑΥΓΗ",
+          "kind": "interview",
+          "medium": "text",
+          "date": null,
+          "quote": null,
+          "target_title": "Just a moment...",
+          "status": 403,
+          "final_url": null,
+          "dead": true,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://left.gr/news/petros-markaris-o-ios-mporei-na-ginei-dikaiologia",
+          "label_el": "Μανώλης Πιμπλής, LEFT",
+          "byline": "Μανώλης Πιμπλής",
+          "outlet": "LEFT",
+          "kind": "interview",
+          "medium": "text",
+          "date": null,
+          "quote": null,
+          "target_title": "CNAME Cross-User Banned | Cloudflare",
+          "status": 403,
+          "final_url": null,
+          "dead": true,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://bookpress.gr/stiles/protaseis/12397-ellinika-astynomika-mythistorimata",
+          "label_el": null,
+          "byline": "Χίλντα Παπαδημητρίου",
+          "outlet": "Bookpress",
+          "kind": "review",
+          "medium": "text",
+          "date": "2020-10-23",
+          "quote": "Ο Πέτρος Μάρκαρης έχει την εμπειρία και την οξυδέρκεια να σχολιάζει τις πολιτικές εξελίξεις της χώρας μας όσο είναι φρέσκιες ακόμα.",
+          "target_title": "Πέντε αστυνομικά μυθιστορήματα με ελληνική σφραγίδα",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://ixotisartas.gr/%CF%83%CF%85%CE%BD%CE%AD%CE%BD%CF%84%CE%B5%CF%85%CE%BE%CE%B7-%CF%84%CE%BF%CF%85-%CF%80%CE%AD%CF%84%CF%81%CE%BF%CF%85-%CE%BC%CE%AC%CF%81%CE%BA%CE%B1%CF%81%CE%B7-%CF%83%CF%84%CE%BF%CE%BD-%CE%B5%CE%BB/",
+          "label_el": null,
+          "byline": "Ελπιδοφόρος Ιντζέμπελης",
+          "outlet": "Ηχώ της Άρτας",
+          "kind": "review",
+          "medium": "text",
+          "date": "2020-10-12",
+          "quote": "Συνέντευξη στον Ελπιδοφόρο Ιντζέμπελη.",
+          "target_title": "Συνέντευξη του Πέτρου Μάρκαρη στον Ελπιδοφόρο Ιντζέμπελη – ΗΧΩ ΤΗΣ ΑΡΤΑΣ",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://poli-k.net/petros-markaris-otan-gino-exallos-prepei-na-vro/",
+          "label_el": null,
+          "byline": "Ιωάννης Κοντός",
+          "outlet": "Πόλη Κ",
+          "kind": "review",
+          "medium": "text",
+          "date": "2020-10-06",
+          "quote": "Συνέντευξη στον Ιωάννη Κοντό",
+          "target_title": "Πέτρος Μάρκαρης: «Όταν γίνω έξαλλος, πρέπει να βρω μια ιστορία να αφηγηθώ» | πόλη Κ",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.cuemagazine.gr/2022/01/03/o-fonos-einai-xrhma-tou-petrou-markari-apo-tis-ekdoseis-keimena/",
+          "label_el": null,
+          "byline": "Ελένη Κουνένη",
+          "outlet": "CUE",
+          "kind": "review",
+          "medium": "text",
+          "date": "2022-01-02",
+          "quote": "Ο αναγνώστης ταυτίζεται με τις αγωνίες του, αλλά και με την οικουμενική ματιά του που τον έχει κάνει πασίγνωστο σε πολλές χώρες του κόσμου στις γλώσσες των οποίων έχει μεταφραστεί.",
+          "target_title": "Ο φόνος είναι χρήμα του Πέτρου Μάρκαρη από τις Εκδόσεις Κείμενα - CueMagazine",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.avgi.gr/tehnes/383442_otan-hrima-fernei-fonoys-kai-oi-ependyseis-ftoheia",
+          "label_el": null,
+          "byline": "Αντώνης Φράγκος",
+          "outlet": "Η Αυγή",
+          "kind": "review",
+          "medium": "text",
+          "date": null,
+          "quote": "Ο γραμμικός τρόπος γραφής, σήμα κατατεθέν του Μάρκαρη, παραμένει ισχυρός.",
+          "target_title": "Just a moment...",
+          "status": 403,
+          "final_url": null,
+          "dead": true,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://iporta.gr/%CE%B4%CE%B9%CE%B1%CE%B2%CE%AC%CE%B6%CE%BF%CE%BD%CF%84%CE%B1%CF%82-%CE%BF-%CF%86%CF%8C%CE%BD%CE%BF%CF%82-%CE%B5%CE%AF%CE%BD%CE%B1%CE%B9-%CF%87%CF%81%CE%AE%CE%BC%CE%B1-%CF%84%CE%BF%CF%85-%CF%80/",
+          "label_el": null,
+          "byline": "Άγγελος Κουτσούκης",
+          "outlet": "iporta",
+          "kind": "review",
+          "medium": "text",
+          "date": "2020-08-05",
+          "quote": "Οι κοινωνικές συνθήκες είναι αυτές που καθορίζουν την στάση των ηρώων. Τίποτα δεν προκύπτει μόνο του. Όλα έχουν γενεσιουργές αιτίες.",
+          "target_title": "Διαβάζοντας: \"Ο φόνος είναι χρήμα\" του Πέτρου Μάρκαρη, του Άγγελου Κουτσούκη - iporta.gr",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.oanagnostis.gr/petros-markaris-korona-chaneis-grammata-kerdizo-synenteyxi-stin-kyriaki-mpeiogloy/",
+          "label_el": null,
+          "byline": "Κυριακή Μπεϊόγλου",
+          "outlet": "Ο αναγνώστης",
+          "kind": "review",
+          "medium": "text",
+          "date": "2020-09-11",
+          "quote": "Άκρως γοητευτικό αστυνομικό βιβλίο που θα σας κρατήσει αμείωτο το ενδιαφέρον.",
+          "target_title": "Πέτρος Μάρκαρης: «Κορώνα χάνεις, γράμματα κερδίζω…» (συνέντευξη στην Κυριακή Μπεϊόγλου) - ΠΕΡΙΟΔΙΚΟ Ο ΑΝΑΓΝΩΣΤΗΣ ΓΙΑ ΤΟ ΒΙΒΛΙΟ ΚΑΙ ΤΙΣ ΤΕΧΝΕΣ",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.athensvoice.gr/politismos/vivlio/680660/petros-markaris-i-pandimia-den-allaxe-tin-kathimerinotita-moy/",
+          "label_el": null,
+          "byline": "Κέλλυ Κρητικού",
+          "outlet": "Athens Voice",
+          "kind": "review",
+          "medium": "text",
+          "date": "2020-09-23",
+          "quote": "Το φαινόμενο Πέτρος Μάρκαρης ξέρει πώς να διατηρεί το ενδιαφέρον του συνομιλητή του αμείωτο, με την αφοπλιστική του ειλικρίνεια και αμεσότητα.",
+          "target_title": "Πέτρος Μάρκαρης: «Πρόβλημα η άρνηση της ύπαρξης του κορωνοϊού» | Athens Voice",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://popaganda.gr/art/petros-markaris/",
+          "label_el": null,
+          "byline": "Γιώργος Βαϊλάκης",
+          "outlet": "Popaganda",
+          "kind": "review",
+          "medium": "text",
+          "date": null,
+          "quote": "Με όχημα το έγκλημα και το μυστήριο που το περιβάλλει, ο Πέτρος Μάρκαρης γίνεται ένας αποτελεσματικός ανατόμος της κοινωνίας και των προσώπων που τη συγκροτούν.",
+          "target_title": "Ο Πέτρος Μάρκαρης επιφυλάσσει μια έκπληξη στο τελευταίο βιβλίο του - POPAGANDA",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.fractalart.gr/o-fonos-einai-xrima/",
+          "label_el": null,
+          "byline": "Διώνη Δημητριάδου",
+          "outlet": "Fractal",
+          "kind": "review",
+          "medium": "text",
+          "date": "2020-07-14",
+          "quote": "Ο Μάρκαρης έχει γράψει το πιο πολιτικό του βιβλίο, το πιο οδυνηρό στην αλήθεια του.",
+          "target_title": "Ένα καθαρά πολιτικό βιβλίο • Fractal",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        }
+      ]
+    },
+    "i-epochi-tis-ypokrisias": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2022/11/Markaris_upokrisia13.pdf"
+      },
+      "links": []
+    },
+    "palia-poly-palia": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2022/07/MARKARIS-PALIA-POLY-PALIA-APOSPASMA.pdf"
+      },
+      "links": []
+    },
+    "vasikos-metochos": {
+      "excerpt": null,
+      "links": []
+    },
+    "o-tse-aftoktonise": {
+      "excerpt": null,
+      "links": []
+    },
+    "amyna-zonis": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2022/11/Markarhs-Amyna-Zwnhs-Issuu.pdf"
+      },
+      "links": []
+    },
+    "nychterino-deltio": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2022/11/Markarhs-nyxterino-2020-ISSUU.pdf"
+      },
+      "links": []
+    },
+    "i-techni-tou-tromou": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2022/11/MARKARIS-DIHGHMATA-2021.pdf"
+      },
+      "links": [
+        {
+          "url": "https://popaganda.gr/art/petros-markaris-interview/",
+          "label_el": "Γιώργος Βαϊλάκης - Popaganda",
+          "byline": "Γιώργος Βαϊλάκης",
+          "outlet": "Popaganda",
+          "kind": "interview",
+          "medium": "text",
+          "date": null,
+          "quote": null,
+          "target_title": "Πέτρος Μάρκαρης: «Δημιουργείται μία νέα εργατική τάξη, με πανεπιστημιακή μόρφωση και μάστερ» - POPAGANDA",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://esquire.com.gr/culture/biblia/14950/giortazoume-tin-pagkosmia-imera-bibliou-2021-me-10-korufaies-biblioprotaseis?fbclid=IwAR3pQ5MRg4i8pjziw7N-3k5t_hcX0O9WwXUlALpZTXfS4-rxmrue4_bzGEE",
+          "label_el": null,
+          "byline": "Παναγιώτης Κούστας",
+          "outlet": "Esquire",
+          "kind": "review",
+          "medium": "text",
+          "date": null,
+          "quote": "Ο μετρ της εγχώριας αστυνομικής λογοτεχνίας.",
+          "target_title": "Παγκόσμια Ημέρα Βιβλίου 2021: 10 κορυφαίες βιβλιοπροτάσεις | Esquire Greece",
+          "status": 200,
+          "final_url": "https://esquire.com.gr/entertainment/biblia/14950/giortazoume-tin-pagkosmia-imera-bibliou-2021-me-10-korufaies-biblioprotaseis?fbclid=IwAR3pQ5MRg4i8pjziw7N-3k5t_hcX0O9WwXUlALpZTXfS4-rxmrue4_bzGEE",
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.oanagnostis.gr/astynomiki-vivliothiki-5-ioynios-2021-toy-markoy-kritikoy/?fbclid=IwAR0Gv-D_Jq1uGgtBI_lrPwRqA13wW9rr2ANt_rjbBSCGEuM_SI-KtFXgTsA",
+          "label_el": null,
+          "byline": "Μάρκος Κρητικός",
+          "outlet": "Ο αναγνώστης",
+          "kind": "review",
+          "medium": "text",
+          "date": "2021-06-10",
+          "quote": "Η ευαίσθητη κοινωνική ματιά και η αφηγηματική δεινότητα του Πέτρου Μάρκαρη.",
+          "target_title": "Αστυνομική Βιβλιοθήκη 5 (Ιούνιος 2021) - του Μάρκου Κρητικού - ΠΕΡΙΟΔΙΚΟ Ο ΑΝΑΓΝΩΣΤΗΣ ΓΙΑ ΤΟ ΒΙΒΛΙΟ ΚΑΙ ΤΙΣ ΤΕΧΝΕΣ",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.epohi.gr/article/40165/o-haritos-se-thlediaskepsh",
+          "label_el": null,
+          "byline": "Μανώλης Πιμπλής",
+          "outlet": "Η εποχή",
+          "kind": "review",
+          "medium": "text",
+          "date": "2021-07-04",
+          "quote": "Ένας Μάρκαρης σε φόρμα, στα καλύτερά του των τελευταίων χρόνων.",
+          "target_title": "Ο Χαρίτος σε τηλεδιάσκεψη | Εφημερίδα η Εποχή",
+          "status": 200,
+          "final_url": "https://epohi.gr/articles/o-haritos-se-thlediaskepsh/",
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.tovima.gr/2022/04/11/books-ideas/egklima-kai-pandimia/",
+          "label_el": null,
+          "byline": "Φίλιππος Φιλίππου",
+          "outlet": "ΤΟ ΒΗΜΑ",
+          "kind": "review",
+          "medium": "text",
+          "date": "2022-04-11",
+          "quote": "Το θέμα της πανδημίας που άλλαξε τη ζωή μας απασχολεί τον Μάρκαρη.",
+          "target_title": "Εγκλημα και πανδημία - ΤΟ ΒΗΜΑ",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.lifo.gr/culture/vivlio/deka-astynomika-mythistorimata-gia-tis-kalokairines-diakopes?fbclid=IwAR1PbHURgxFFEPEP05fnHcpxi2lmeabsuIxc7564zCTw6FcVLuAir85AYVU",
+          "label_el": null,
+          "byline": "Μαρία Δρουκοπούλου",
+          "outlet": "LIFO",
+          "kind": "roundup",
+          "medium": "text",
+          "date": "2021-07-12",
+          "quote": "Δέκα καλύτερα αστυνομικά βιβλία.",
+          "target_title": "Δέκα αστυνομικά μυθιστορήματα για τις καλοκαιρινές διακοπές | LiFO",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        }
+      ]
+    },
+    "faust": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2022/11/Faust-ISSUU-2020-merged.pdf"
+      },
+      "links": [
+        {
+          "url": "https://www.ertecho.gr/radio/trito/show/mikres-deksamenes-melanis/podcast/502826/mikres-deksamenes-melanis-triti-24-oktovriou-2023/",
+          "label_el": "Αφροδίτη Κοσμά - Τρίτο Πρόγραμμα ΕΡΤ",
+          "byline": "Αφροδίτη Κοσμά",
+          "outlet": "Τρίτο Πρόγραμμα ΕΡΤ",
+          "kind": "interview",
+          "medium": "audio",
+          "date": null,
+          "quote": null,
+          "target_title": "404 - Page not found - ERT εcho",
+          "status": 404,
+          "final_url": null,
+          "dead": true,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.documentonews.gr/article/petros-markarhs-fobamai-oti-meta-thn-pandhmia-tha-exoyme-to-neo-proletariato-me-master/",
+          "label_el": "Έμυ Ντούρου - Documento",
+          "byline": "Έμυ Ντούρου",
+          "outlet": "Documento",
+          "kind": "interview",
+          "medium": "text",
+          "date": null,
+          "quote": null,
+          "target_title": "Just a moment...",
+          "status": 403,
+          "final_url": null,
+          "dead": true,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.efsyn.gr/nisides/282346_i-megali-tragodia-toy-faoyst",
+          "label_el": null,
+          "byline": "Κυριακή Μπεϊόγλου",
+          "outlet": "ΕΦΣΥΝ",
+          "kind": "review",
+          "medium": "text",
+          "date": "2021-02-21",
+          "quote": "Ο Πέτρος Μάρκαρης είναι ένας από τους πιο ουσιαστικούς μελετητές και μεταφραστές του Goethe.",
+          "target_title": "Η μεγάλη τραγωδία του Φάουστ",
+          "status": 200,
+          "final_url": "https://www.efsyn.gr/nisides/282346_i-megali-tragodia-toy-faoyst/",
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.bookfeed.gr/2021/03/13/goethe-faoyst-mia-tragodia-ekdoseis-keimena/",
+          "label_el": null,
+          "byline": "Γιάννης Αντωνιάδης",
+          "outlet": "BookFeed",
+          "kind": "review",
+          "medium": "text",
+          "date": "2021-03-13",
+          "quote": "Το κείμενο του Γκαίτε στέκεται αγέρωχα ζωντανό και ώριμο μέσα στους αιώνες.",
+          "target_title": "Goethe, Φάουστ. Μια τραγωδία, Εκδόσεις Κείμενα - bookfeed",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://popaganda.gr/art/faust-goethe-nea-ekdosi-se-isagogi-metafrasi-ke-scholia-tou-petrou-markari/",
+          "label_el": null,
+          "byline": "Γιώργος Βαϊλάκης",
+          "outlet": "Popaganda",
+          "kind": "review",
+          "medium": "text",
+          "date": "2021-09-25",
+          "quote": "Όπως φαίνεται και από αυτήν την εξαιρετική μετάφραση, ο Γκαίτε επανεξετάζει και ενίοτε κομματιάζει ιδέες, αξιώματα, δόγματα και προκαταλήψεις μιας ολόκληρης εποχής.",
+          "target_title": "Η νέα έκδοση του Φάουστ του Γκαίτε, παρουσιάζεται σε εισαγωγή, μετάφραση και σχόλια του Πέτρου Μάρκαρη - POPAGANDA",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://bookpress.gr/kritikes/xeni-pezografia/13618-goethe-johann-wolfgang-von-keimena-faoust-karabesinis?fbclid=IwAR2ixINOVm7xeDojfgSIBUyMh-FB6_o3YXUCqyGnpFEoVETh2XXNjtkeOaE",
+          "label_el": null,
+          "byline": "Φώτης Καραμπεσίνης",
+          "outlet": "BookPress",
+          "kind": "review",
+          "medium": "text",
+          "date": "2021-06-03",
+          "quote": "Είμαι ευγνώμων στον αξιέπαινο μεταφραστή που μου προσέφερε τη δυνατότητα να προσεγγίσω ένα κείμενο που ειδάλλως θα παρέμενε για πάντα απρόσιτο και επτασφράγιστο ως μυστικό.",
+          "target_title": "Φάουστ: μια τραγωδία, του Γιόχαν Βόλφγκανγκ φον Γκαίτε",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.pastafloramag.gr/vivlio/faoyst-mtf-petros-markaris/",
+          "label_el": null,
+          "byline": "Συλβάννα Παπαϊωάννου",
+          "outlet": "Pasta Flora",
+          "kind": "review",
+          "medium": "text",
+          "date": "2021-05-28",
+          "quote": "Ο Φάουστ πραγματεύεται ηθικά και υπαρξιακά ζητήματα που παραμένουν πάντοτε καίρια.",
+          "target_title": "Φάουστ - Μτφ. Πέτρος Μάρκαρης - Pasta Flora Magazine",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        }
+      ]
+    },
+    "i-athina-tis-mias-diadromis": {
+      "excerpt": null,
+      "links": [
+        {
+          "url": "https://serpico.gr/toposima-petros-markaris-ilektrikos-audio/",
+          "label_el": "Συνέντευξη στον Πάνο Πολυζωΐδη (Αθήνα 98,4 FM)",
+          "byline": null,
+          "outlet": null,
+          "kind": "interview",
+          "medium": "audio",
+          "date": "2024-05-11",
+          "quote": null,
+          "target_title": "Τοπόσημα: Με τον Πέτρο Μάρκαρη στον Ηλεκτρικό [aud] | serpico.gr",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.documentonews.gr/article/o-petros-markaris-kai-i-athina-ton-antitheseon/",
+          "label_el": null,
+          "byline": "Έμυ Ντούρου",
+          "outlet": "Documento",
+          "kind": "review",
+          "medium": "text",
+          "date": null,
+          "quote": "Είναι ένα βιβλίο που δεν μπορείς να αφήσεις από τα χέρια σου. Ένα βιβλίο που αποδίδει τη σύγχρονη ταυτότητα της πόλης μέσα από το παρελθόν, την ανθρωπογεωγραφία, τις συνήθειες, τα κουσούρια και τις ομορφιές της.",
+          "target_title": "Just a moment...",
+          "status": 403,
+          "final_url": null,
+          "dead": true,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.lifo.gr/culture/vivlio/exi-biblia-ellinon-syggrafeon-me-stohastiko-kai-kainofani-logo",
+          "label_el": null,
+          "byline": "Τίνα Μανδηλαρά",
+          "outlet": "LIFO",
+          "kind": "review",
+          "medium": "text",
+          "date": "2024-05-02",
+          "quote": "Τα βιωματικά αυτά κείμενα, μας θυμίζουν τις κρυμμένες ιστορίες της πόλης από τον Πειραιά μέχρι την Κηφισιά, αποκαλύπτοντας ταυτόχρονα τις κοινωνικές διαστρωματώσεις και το ετερόκλητο τοπίο.",
+          "target_title": "Έξι βιβλία Ελλήνων συγγραφέων με στοχαστικό και καινοφανή λόγο | LiFO",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        },
+        {
+          "url": "https://www.lifo.gr/culture/vivlio/i-athina-tis-mias-diadromis-i-periigisi-toy-petroy-markari-stis-geitonies-apo-tis",
+          "label_el": null,
+          "byline": "Σταυρούλα Παπασπύρου",
+          "outlet": "LIFO",
+          "kind": "review",
+          "medium": "text",
+          "date": "2024-04-30",
+          "quote": "Για κάποιον που περνά στον Ηλεκτρικό –διαβάζοντας!– πολλές ώρες τη βδομάδα, τι πιο ερεθιστικό από μια ξενάγηση στις γειτονιές μέσα από τις οποίες περνά ο συρμός, μ’ όλες τις συνήθειες, τις γεύσεις και τις αντιθέσεις τους.",
+          "target_title": "«Η Αθήνα της μιας διαδρομής»: Η περιήγηση του Πέτρου Μάρκαρη στις γειτονιές από τις οποίες περνά ο Ηλεκτρικός | LiFO",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        }
+      ]
+    },
+    "istories-tou-kyriou-koiner": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2024/07/Brecht-Keuner-2022.pdf"
+      },
+      "links": []
+    },
+    "istories-tis-allis-ochthis": {
+      "excerpt": {
+        "flipbook": null,
+        "pdf": "https://keimenabooks.gr/wp-content/uploads/2022/10/Tourkika-Dihghmata-2022.pdf"
+      },
+      "links": [
+        {
+          "url": "https://soundcloud.com/user-46820274-209698857/ti-fasi-istories-tis-allis-oxthis-mesa-apo-ti-logotexnia",
+          "label_el": "Κυριακή Μπεϊόγλου - Pod.gr",
+          "byline": "Κυριακή Μπεϊόγλου",
+          "outlet": "Pod.gr",
+          "kind": "interview",
+          "medium": "audio",
+          "date": null,
+          "quote": null,
+          "target_title": "Stream episode Ιστορίες της άλλης όχθης μέσα από τη λογοτεχνία by Pod.gr podcast | Listen online for free on SoundCloud",
+          "status": 200,
+          "final_url": null,
+          "dead": false,
+          "checked": "2026-08-05"
+        }
+      ]
+    }
+  }
+}
