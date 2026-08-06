@@ -3,17 +3,18 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { SLOTS_CHANGED, DRAG_BOOK } from '@/components/three/events';
+import { SLOTS_CHANGED, DRAG_BOOK, SHELF_CURRENT } from '@/components/three/events';
 import { t as dict } from '@/lib/i18n';
 import { title as bookTitle, titleLang, teaser } from '@/lib/content';
 import { useGround } from '@/lib/useGround';
 import Rail from '@/components/Rail';
 import grounds from '@/content/grounds.json';
 
-/* The four corners the held-book teaser can land in. Picked fresh each time
-   a drag starts (never mid-drag) so the label doesn't chase the pointer --
-   see the teaser effect below and .teaser in globals.css. */
-const TEASER_CORNERS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+/* The four corners the held-book teaser can land in -- top/bottom is chosen
+   to clear the book actually being dragged (see the teaser effect below),
+   left/right is free, so DEFAULT_TEASER_CORNER only matters before any drag
+   has happened yet. See .teaser in globals.css. */
+const DEFAULT_TEASER_CORNER = 'top-left';
 
 /**
  * The shelf: a stacked pile, turned by dragging, opened by a click on a
@@ -34,7 +35,7 @@ export default function Shelf({ books, locale }) {
   const router = useRouter();
   const [dragging, setDragging] = useState(null);
   const [teaserBook, setTeaserBook] = useState(null);
-  const [teaserCorner, setTeaserCorner] = useState(TEASER_CORNERS[0]);
+  const [teaserCorner, setTeaserCorner] = useState(DEFAULT_TEASER_CORNER);
   /* Which book is "here" -- the shelf slot nearest the viewport's middle.
      Drives the rail's current tick. */
   const [current, setCurrent] = useState(0);
@@ -86,16 +87,32 @@ export default function Shelf({ books, locale }) {
      canvas owns the gesture and knows nothing of this component; DRAG_BOOK
      is how it tells the page.
 
-     The same event drives the held-book teaser: a fresh corner is rolled
+     The same event drives the held-book teaser: a fresh corner is picked
      only when a drag STARTS (id goes from null to something), and
      `teaserBook` is left standing on release rather than cleared, so the
      text stays put while the teaser fades out instead of vanishing with
-     it. */
+     it.
+
+     The book being dragged doesn't travel across the screen -- it only
+     rotates in place, at its own slot's rect (BookVolume sizes and
+     positions it straight from the same DOM element this reads here) -- so
+     which HALF the teaser lands in is not random: it's whichever of
+     top/bottom is farther from that rect, the one guaranteed not to have
+     the book sitting in it. That matters most on mobile, where a dragged
+     book is zoomed to near the full width of the screen (see
+     MOBILE_STACK_ZOOM in BookVolume.jsx) and every corner used to be fair
+     game for the pointer to land the label on top of it. Left/right stays
+     random -- horizontal position was never the collision, only vertical
+     was. */
   useEffect(() => {
     const onDrag = (e) => {
       const id = e.detail?.id ?? null;
       if (id) {
-        setTeaserCorner(TEASER_CORNERS[Math.floor(Math.random() * TEASER_CORNERS.length)]);
+        const rect = document.querySelector(`[data-book-slot="${id}"]`)?.getBoundingClientRect();
+        const bookMidY = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+        const half = bookMidY > window.innerHeight / 2 ? 'top' : 'bottom';
+        const side = Math.random() < 0.5 ? 'left' : 'right';
+        setTeaserCorner(`${half}-${side}`);
         setTeaserBook(id);
       }
       setDragging(id);
@@ -106,46 +123,16 @@ export default function Shelf({ books, locale }) {
 
   /* ---- Which book is the reader at ------------------------------------- */
 
+  /* BookCanvas.jsx's own place() already measures every slot's rect every
+     frame and already computes this exact quantity (as `s.progress`) for its
+     own purposes -- this used to be a second, independent rAF-throttled
+     scroll listener doing the same `getBoundingClientRect` pass over the
+     same elements to answer the same question. One tracker, multiple
+     consumers (plan.md Phase 2.5): consume the broadcast instead. */
   useEffect(() => {
-    let frame = 0;
-    const measure = () => {
-      frame = 0;
-      /* At the very top of the page the first book's row can sit ABOVE the
-         viewport's vertical middle (there's a nav/hero above the stack), so
-         the nearest-to-mid heuristic below picks the second book instead --
-         the rail then opens on the wrong tick before the reader has
-         scrolled at all. Scroll position 0 unambiguously means "the first
-         book", so it short-circuits the heuristic rather than relying on it
-         to get an edge case right. */
-      if (window.scrollY <= 0) {
-        setCurrent(0);
-        return;
-      }
-      const rows = [...document.querySelectorAll('[data-book-slot]')];
-      const mid = window.innerHeight / 2;
-      let best = 0;
-      let bestD = Infinity;
-      rows.forEach((el, i) => {
-        const r = el.getBoundingClientRect();
-        const d = Math.abs(r.top + r.height / 2 - mid);
-        if (d < bestD) {
-          bestD = d;
-          best = i;
-        }
-      });
-      setCurrent(best);
-    };
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(measure);
-    };
-    measure();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      if (frame) cancelAnimationFrame(frame);
-    };
+    const onCurrent = (e) => setCurrent(e.detail.index);
+    window.addEventListener(SHELF_CURRENT, onCurrent);
+    return () => window.removeEventListener(SHELF_CURRENT, onCurrent);
   }, []);
 
   /* A rail tick opens that book's own page now, the same destination its

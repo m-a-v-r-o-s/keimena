@@ -93,6 +93,18 @@ const FONT = {
 };
 
 const FRONT = { w: 683, h: 1024 };
+/* The stacked pose's own front, separate from the reading-size one above.
+ *
+ * `POSE.stacked.rake` is 0.05 radians (book-model.js) -- lying almost flat,
+ * the cover is a sliver a few pixels deep, not the subject. A 683x1024
+ * photograph decoded and uploaded to the GPU to paint that sliver was most of
+ * the shelf's own weight (plan.md's own measurement: ~1.5MB of the
+ * homepage's ~2.8MB). 320x480 was checked against the numbers that actually
+ * matter here, not assumed: `--slot-h` tops out at 216px (tokens.css), so
+ * even at DPR 2 the cover's longest ON-SCREEN dimension never exceeds
+ * ~200 CSS px before the rake collapses it further, and mipmapping (see
+ * textures.js) only ever needs to sample DOWN from a source, never up. */
+const FRONT_SM = { w: 320, h: 480 };
 const SPINE = { len: 1024 };
 
 /* Thickness varies per book, and the spine sheet has to vary with it.
@@ -312,10 +324,27 @@ function licensedCover(id) {
 }
 
 /** The publisher's cover, resized and otherwise untouched. */
+/* quality: 78, effort: 6 -- plan.md Phase 1.3. The un-pinned quality: 90 this
+ * replaced produced a 32-216KB range for identically-sized output (quality
+ * was never pinned, only ever inherited from whatever the source happened to
+ * compress to), for a surface whose colour is load-bearing (D10) but whose
+ * detail is seen raked to a sliver on the shelf and only flat-on, full-size,
+ * on a book's own page. 78/6 is sharp's own recommended ceiling for "visually
+ * lossless" webp; verified per-book against tools/render-check.mjs (D10's
+ * cover-against-ground floor), not assumed. */
 async function buildLicensedFront(file) {
   return sharp(file)
     .resize(FRONT.w, FRONT.h, { fit: 'cover', position: 'centre' })
-    .webp({ quality: 90 })
+    .webp({ quality: 78, effort: 6 })
+    .toBuffer();
+}
+
+/** The same crop, shelf-sized -- see FRONT_SM above for why 320x480 is
+ * already generous for what the stacked pose actually shows on screen. */
+async function buildLicensedFrontSmall(file) {
+  return sharp(file)
+    .resize(FRONT_SM.w, FRONT_SM.h, { fit: 'cover', position: 'centre' })
+    .webp({ quality: 72 })
     .toBuffer();
 }
 
@@ -503,29 +532,20 @@ const AUTHOR_EL = author.name_el ?? 'Πέτρος Μάρκαρης';
  * essentially nothing -- measured, dropping them saved 86 bytes on the cloth
  * while putting the edge sheets, which DO carry real colour, at risk. */
 mkdirSync(P('public/textures'), { recursive: true });
-for (const [name, size, quality = 88] of [
+/* quality: 72 -- plan.md Phase 1.5, on top of the resolution work above (which
+ * already halved the tiled sheets and deliberately kept foredge/topedge/
+ * headband at their measured sizes -- see the paragraph above; this doesn't
+ * revisit that). 88 was never chosen for a reason, just inherited; checked
+ * against render-check.mjs and against `cloth` specifically as a bump map
+ * (globals.css/textures.js), the one place over-compression would show as
+ * mush rather than softness -- no visible change at either role. */
+for (const [name, size, quality = 72] of [
   ['foredge', 1024],
   ['topedge', 1024],
   ['cloth', 384],
   ['board', 384],
   ['endpaper', 384],
   ['headband', 512],
-  /* The room's own sheet, and the one exception to the paragraph above: it is
-     not a book's surface but the wall behind them all, seen whole and at full
-     size rather than on an edge -- and never tiled, so none of the above
-     applies to it. It is also nearly black, which is where webp is at its
-     worst: the default quality flattens the linen into patches and loses the
-     drawn columns entirely.
-
-     So it keeps its full 1024. What it gives up is the last few points of
-     quality, and that is the right axis for this sheet -- measured against the
-     1024/q94 it used to publish, easing to q90 holds 42dB while shrinking it
-     by two fifths, where resizing to 768 and keeping q94 costs MORE fidelity
-     (38dB) to save less. On a nearly-black linen the artefact that matters is
-     banding, and banding comes from resampling a smooth gradient, not from a
-     quality point. Resolution is what this sheet needs; the last 4 points of
-     quality are what it can spare. */
-  ['background', 1024, 90],
 ]) {
   const img = await textureImage(name);
   if (!img) {
@@ -574,9 +594,16 @@ if (mark) {
  * image is ever replaced -- a different sheet creases in different places. */
 const paperMaster = licensedCover('paper');
 if (paperMaster) {
+  /* 800x1131 -- plan.md Phase 1.4. Same 1055x1491 aspect ratio as the source
+   * (within 0.1%), which matters here specifically because the element this
+   * paints is `background: ... center / 100% 100% no-repeat` (AuthorPoster.jsx)
+   * -- fully stretched to its box regardless of the file's own pixel size, so
+   * an aspect-ratio mismatch would show as visible distortion of the crease
+   * pattern, not just softer detail. FOLDS in AuthorPoster.jsx are fractions
+   * of printed height, not pixels, so they are unaffected by this resize. */
   writeFileSync(
     P('public/textures/paper.webp'),
-    await sharp(paperMaster).webp({ quality: 92 }).toBuffer()
+    await sharp(paperMaster).resize(800, 1131).webp({ quality: 70 }).toBuffer()
   );
   console.log('paper.webp published');
 } else {
@@ -621,6 +648,7 @@ for (const book of targets) {
   mkdirSync(outDir, { recursive: true });
 
   writeFileSync(join(outDir, 'front.webp'), await buildLicensedFront(src));
+  writeFileSync(join(outDir, 'front-sm.webp'), await buildLicensedFrontSmall(src));
   writeFileSync(join(outDir, 'spine.webp'), await buildSpine(book, title, AUTHOR_EL, 'ΚΕΙΜΕΝΑ'));
   writeFileSync(
     join(outDir, 'og.png'),

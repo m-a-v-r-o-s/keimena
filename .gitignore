@@ -5,8 +5,10 @@ out/
 .DS_Store
 *.log
 .screenshots/profile/
+.screenshots/perf/
 .screenshots/*.mjs.bak
 __pycache__/
+tools/.venv/
 
 # Local build/session notes -- not for the public repo
 .claude/
@@ -15,7 +17,9 @@ DECISIONS.md
 HANDOFF.md
 HANDOFF-*.md
 PLAN.md
+plan*.md
 REDESIGN.md
 LIGHT_PLAN.md
 COLOR-REDESIGN.md
 LLM_GUIDELINES.md
+mobile-audit-report.html

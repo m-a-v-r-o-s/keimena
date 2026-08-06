@@ -6,15 +6,27 @@ import { NoToneMapping, SRGBColorSpace, PMREMGenerator, Object3D } from 'three';
 import { buildEnvironment } from './env';
 import BookVolume from './BookVolume';
 import { bookById } from '@/lib/content';
-import { SLOTS_CHANGED, DRAG_BOOK, CANVAS_READY } from './events';
-import { loadTexture, coverUrl, spineUrl } from './textures';
+import { SLOTS_CHANGED, DRAG_BOOK, CANVAS_READY, SHELF_CURRENT } from './events';
+import { loadTexture, coverUrl, coverSmallUrl, spineUrl } from './textures';
 
 /* Distance from the camera to the z=0 plane. The fov is derived from it so that
  * one world unit is exactly one CSS pixel at that plane -- which is what lets a
  * book be positioned straight from its DOM rect, with no projection maths and
  * no chance of the object drifting away from its own caption. */
 const CAM_Z = 1200;
-const OVERSCAN = 1.0; // viewports of slack before a book stops being drawn
+/* Two tiers, not one -- plan.md Phase 2.3. The old single OVERSCAN (1.0) meant
+ * "mount a BookVolume and fetch its textures" were the same boundary, and at
+ * this site's slot height that boundary sat almost a full viewport out on
+ * both sides -- most of the catalogue, drawn and textured, the moment any of
+ * it was onscreen at all. Split into how far out a volume is actually MOUNTED
+ * (drawn, animated, holding a mesh) and how far out its textures start
+ * warming the shared cache (below, from place() itself) without mounting
+ * anything. 0.35 is tuned to the fold: raise it if a fast scroll ever shows a
+ * volume popping in visibly at the edge of the mounted band; this session's
+ * headless testing didn't find that edge, but it is exactly the kind of thing
+ * that only shows on a real scroll, so watch for it. */
+const MOUNT_OVERSCAN = 0.35;
+const FETCH_OVERSCAN = 1.25;
 const DRAG_SLOP = 6;  // px of movement before a press counts as a drag, not a click
 /* How far the returning pile starts from where it belongs, as a fraction of the
    viewport. Enough that each block is off its own edge of the frame when it
@@ -134,7 +146,7 @@ function Scene({ slotsRef, version, mobile, reduced }) {
       />
 
       {slotsRef.current.map((slot) =>
-        slot.onscreen ? (
+        slot.mountOnscreen ? (
           <BookVolume
             key={slot.key}
             slot={slot}
@@ -166,6 +178,10 @@ export default function BookCanvas() {
   const invalidateRef = useRef(() => {});
   const drag = useRef(null);
   const rafRef = useRef(0);
+  /* The last index published on SHELF_CURRENT (Phase 2.5) -- compared every
+     tick so the event only fires on an actual change, the same discipline
+     `changed`/setVersion already follows below for mountOnscreen. */
+  const currentRef = useRef(0);
 
   /**
    * Rects are measured LIVE, every frame, never cached against the document.
@@ -182,31 +198,108 @@ export default function BookCanvas() {
   const place = useCallback(() => {
     const W = window.innerWidth;
     const H = window.innerHeight;
-    const margin = H * OVERSCAN;
-    let changed = false;
+    const mountMargin = H * MOUNT_OVERSCAN;
+    const fetchMargin = H * FETCH_OVERSCAN;
+    let changed = false; // a slot's mountOnscreen flipped -- forces the React re-render Scene's .map needs
+    /* Whether anything a BookVolume actually reads (position, size,
+       progress) moved this tick -- plan.md Phase 2.6's quiescence signal.
+       Gates the invalidate() below, and its return value gates the tick
+       loop itself: nothing here bypasses the reconciler except an imperative
+       write inside a useFrame closure, so nothing here needs a redraw when
+       every one of those writes was a no-op. */
+    let moved = false;
+    /* Which mounted slot is nearest the viewport's middle -- see SHELF_CURRENT
+       in events.js. Tracked alongside the same rect this loop already reads
+       for `s.progress`, rather than a second pass over the elements. */
+    let bestIdx = -1;
+    let bestProgress = -Infinity;
 
-    for (const s of slotsRef.current) {
+    for (let i = 0; i < slotsRef.current.length; i++) {
+      const s = slotsRef.current[i];
       const r = s.el.getBoundingClientRect();
-      const was = s.onscreen;
-      s.onscreen = r.bottom > -margin && r.top < H + margin && r.width > 0;
-      if (s.onscreen !== was) changed = true;
-      if (!s.onscreen) continue;
+      const was = s.mountOnscreen;
+      s.mountOnscreen = r.bottom > -mountMargin && r.top < H + mountMargin && r.width > 0;
+      if (s.mountOnscreen !== was) {
+        changed = true;
+        moved = true;
+      }
 
-      s.width = r.width;
-      s.height = r.height;
-      s.x = r.left + r.width / 2 - W / 2;
-      s.y = -(r.top + r.height / 2 - H / 2);
+      /* The fetch tier warms the shared texture cache for a slot well before
+         it is due to be mounted and drawn, so by the time MOUNT_OVERSCAN's
+         tighter boundary reaches it, `loadTexture`'s cache already has (or is
+         already fetching) what BookVolume's own mount effect is about to ask
+         for -- same URL, same cache, no second request. Fired once, on the
+         transition INTO the fetch band, not every frame this loop runs. */
+      const wasFetching = s.fetchOnscreen;
+      s.fetchOnscreen = r.bottom > -fetchMargin && r.top < H + fetchMargin && r.width > 0;
+      if (s.fetchOnscreen && !wasFetching) {
+        loadTexture(s.pose === 'upright' ? coverUrl(s.book.id) : coverSmallUrl(s.book.id));
+        loadTexture(spineUrl(s.book.id));
+      }
+
+      if (!s.mountOnscreen) continue;
+
+      const width = r.width;
+      const height = r.height;
+      const x = r.left + r.width / 2 - W / 2;
+      const y = -(r.top + r.height / 2 - H / 2);
+      /* Sub-pixel jitter (layout rounding, not actual motion) must not keep
+         the tick loop awake forever -- 0.05px is well under anything a
+         reader could perceive, but well over the floating-point noise a
+         static element's own rect can carry between two calls. */
+      if (
+        Math.abs(x - s.x) > 0.05 ||
+        Math.abs(y - s.y) > 0.05 ||
+        Math.abs(width - s.width) > 0.05 ||
+        Math.abs(height - s.height) > 0.05
+      ) {
+        moved = true;
+      }
+      s.width = width;
+      s.height = height;
+      s.x = x;
+      s.y = y;
 
       /* How near the reading zone this book is: 1 at the centre of the
          viewport, 0 at either edge. The stack's motion is driven from this.
          It reads scroll and never writes it, so a hijack is impossible here by
          construction rather than by convention. */
       const centre = r.top + r.height / 2;
-      s.progress = 1 - Math.min(1, Math.abs(centre - H / 2) / (H / 2));
+      const progress = 1 - Math.min(1, Math.abs(centre - H / 2) / (H / 2));
+      if (Math.abs(progress - s.progress) > 0.0005) moved = true;
+      s.progress = progress;
+      if (progress > bestProgress) {
+        bestProgress = progress;
+        bestIdx = i;
+      }
+    }
+
+    /* At the very top of the page the first slot's row can sit ABOVE the
+       viewport's vertical middle (there's a nav/hero above the stack), so
+       the nearest-to-mid heuristic above picks the second slot instead --
+       carried over from Shelf.jsx's own version of this check, which this
+       replaces (plan.md Phase 2.5): scroll position 0 unambiguously means
+       "the first slot", so it short-circuits rather than relying on the
+       heuristic to get that edge case right. bestIdx otherwise stays -1
+       only when nothing is mounted yet, which a fresh SLOTS_CHANGED/rebuild
+       corrects on its very next tick -- not worth publishing in the
+       meantime. */
+    const current = window.scrollY <= 0 ? 0 : bestIdx;
+    if (current >= 0 && current !== currentRef.current) {
+      currentRef.current = current;
+      window.dispatchEvent(new CustomEvent(SHELF_CURRENT, { detail: { index: current } }));
     }
 
     if (changed) setVersion((v) => v + 1);
-    invalidateRef.current();
+    /* Gated on `moved`, not called unconditionally: every write this
+       function makes to a slot is read imperatively inside BookVolume's own
+       useFrame, bypassing the reconciler, which is the ONE reason this needs
+       an explicit invalidate() at all (everything that goes through props --
+       mount/unmount, `version` itself -- already invalidates on its own,
+       see r3f's own demand-frameloop behaviour). Nothing moved means nothing
+       for a redraw to show. */
+    if (moved) invalidateRef.current();
+    return moved;
   }, []);
 
 /**
@@ -291,7 +384,8 @@ function stageReturns(slots) {
           width: 0,
           height: 0,
           progress: 0,
-          onscreen: false,
+          mountOnscreen: false,
+          fetchOnscreen: false,
           hovered: false,
           dragging: false,
           dimByDrag: false,
@@ -332,20 +426,63 @@ function stageReturns(slots) {
 
     /* One rAF loop drives placement. Scroll alone is not enough: a slot can
        also be moving because CSS is transitioning it, and that produces no
-       scroll events at all. */
+       scroll events at all.
+     *
+     * IDLES after IDLE_LIMIT consecutive ticks where `place()` found nothing
+     * moved (plan.md Phase 2.6) -- most of a session has the reader not
+     * scrolling, no drag in flight, no CSS transition running, and this loop
+     * was polling every mounted slot's `getBoundingClientRect` every ~12ms
+     * regardless, forever: a permanent main-thread cost that outlives the
+     * page load Phase 1/2's other work targets. STOPS SCHEDULING further
+     * frames rather than scheduling-and-skipping-the-work, and re-arms on
+     * exactly the things that can start a slot moving again without this
+     * component already knowing in advance -- a scroll, a drag starting, a
+     * resize, a fresh layout (SLOTS_CHANGED), or a CSS transition beginning
+     * or ending (a book's own pose transition is exactly this: it produces
+     * no scroll event of its own). Re-arming still measures LIVE from the
+     * very next tick -- idling is a scheduling decision, not a cache; see
+     * the `place` doc comment above for why caching a coordinate instead of
+     * measuring it would be the wrong fix. */
     let last = 0;
+    let idleStreak = 0;
+    let idle = false;
+    const IDLE_LIMIT = 20; // ~240ms of continuous stillness at the throttle below
+
     const tick = (t) => {
+      if (t - last >= 12) {
+        last = t;
+        if (place()) idleStreak = 0;
+        else idleStreak++;
+      }
+      if (idleStreak >= IDLE_LIMIT) {
+        idle = true;
+        return;
+      }
       rafRef.current = requestAnimationFrame(tick);
-      if (t - last < 12) return;
-      last = t;
-      place();
     };
     rafRef.current = requestAnimationFrame(tick);
 
-    const onResize = () => rebuild();
-    const onSlots = () => rebuild();
+    const wake = () => {
+      if (!idle) return;
+      idle = false;
+      idleStreak = 0;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    const onResize = () => {
+      wake();
+      rebuild();
+    };
+    const onSlots = () => {
+      wake();
+      rebuild();
+    };
     window.addEventListener('resize', onResize);
     window.addEventListener(SLOTS_CHANGED, onSlots);
+    window.addEventListener('scroll', wake, { passive: true });
+    document.addEventListener('pointerdown', wake);
+    document.addEventListener('transitionrun', wake);
+    document.addEventListener('transitionend', wake);
 
     /* Fonts settle after first paint and move the slots with them. */
     const settle = setTimeout(onResize, 400);
@@ -355,11 +492,42 @@ function stageReturns(slots) {
       mqReduced.removeEventListener('change', syncMq);
       window.removeEventListener('resize', onResize);
       window.removeEventListener(SLOTS_CHANGED, onSlots);
+      window.removeEventListener('scroll', wake);
+      document.removeEventListener('pointerdown', wake);
+      document.removeEventListener('transitionrun', wake);
+      document.removeEventListener('transitionend', wake);
       cancelAnimationFrame(rafRef.current);
       clearTimeout(settle);
       document.documentElement.classList.remove('webgl-on');
     };
   }, [rebuild, place]);
+
+  /* ---- Keyboard-focus modality ----------------------------------------------
+   * html.using-keyboard is what globals.css's `.webgl-on .slot__hit:focus-
+   * visible` rule gates on to decide whether the flat DOM fallback bar should
+   * reveal itself over a book's WebGL volume. Plain `:focus-visible` isn't
+   * enough on its own: a browser that has seen no input yet in the current
+   * document treats a programmatic `.focus()` call as keyboard-like by
+   * default, and Shelf.jsx's hash-restore effect (`/#book-<id>`) calls one on
+   * every load -- so without an explicit signal the fallback bar would sit lit
+   * in front of that one book regardless of whether the reader is on a mouse,
+   * a trackpad or a keyboard. Tab is the key that actually matters here (it's
+   * what moves focus between spines); any pointerdown clears it, so a click or
+   * tap immediately drops back to trusting the WebGL volume alone. */
+  useEffect(() => {
+    const onKeydown = (e) => {
+      if (e.key === 'Tab') document.documentElement.classList.add('using-keyboard');
+    };
+    const onPointerDown = () => {
+      document.documentElement.classList.remove('using-keyboard');
+    };
+    window.addEventListener('keydown', onKeydown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      window.removeEventListener('keydown', onKeydown);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, []);
 
   /* ---- Pointer ------------------------------------------------------------
    * Listeners live on the document, not the canvas: the canvas is
@@ -488,9 +656,20 @@ function stageReturns(slots) {
    * would drop the reader onto flat-coloured placeholder volumes and call that
    * "loaded". Waiting on every book's cover is too much the other way -- most
    * of the shelf is still off-screen and has not even started fetching. So
-   * this waits on exactly the slots `place()` has already marked onscreen,
+   * this waits on exactly the slots `place()` has already marked mounted
+   * (MOUNT_OVERSCAN, not the wider fetch tier -- see the constants above),
    * through the same `loadTexture` cache BookVolume itself draws from: no
    * second request, no extra bytes, just the same promise resolving twice.
+   *
+   * Waits on whichever front sheet that slot's OWN pose will actually show --
+   * the small shelf sheet for a stacked slot, the full one for a slot that
+   * mounts upright (a book's own page) -- matching BookVolume's own mount
+   * effect exactly (plan.md Phase 2.2). Waiting on the full sheet
+   * unconditionally, as this used to, meant the loader held the page open for
+   * bytes the reader's own first paint was never going to show: a stacked
+   * slot's material paints from the small sheet regardless, so the full one
+   * arriving sooner or later made no visible difference except to how long
+   * the loader stayed up.
    *
    * `allSettled`, not `all` -- a dropped connection on one cover must not hold
    * the whole page hostage behind the loader forever. The 12s inline script in
@@ -500,8 +679,11 @@ function stageReturns(slots) {
     if (!ready) return undefined;
     let cancelled = false;
     const covers = slotsRef.current
-      .filter((s) => s.onscreen)
-      .flatMap((s) => [loadTexture(coverUrl(s.book.id)), loadTexture(spineUrl(s.book.id))]);
+      .filter((s) => s.mountOnscreen)
+      .flatMap((s) => [
+        loadTexture(s.pose === 'upright' ? coverUrl(s.book.id) : coverSmallUrl(s.book.id)),
+        loadTexture(spineUrl(s.book.id)),
+      ]);
     Promise.allSettled(covers).then(() => {
       if (!cancelled) document.documentElement.setAttribute('data-loaded', '');
     });
@@ -514,7 +696,12 @@ function stageReturns(slots) {
     <div className="bookcanvas" aria-hidden="true" data-ready={ready ? '' : undefined}>
       <Canvas
         frameloop="demand"
-        dpr={[1, mobile ? 1.5 : 2]}
+        /* Desktop cap tried at 1.75 (plan.md Phase 3.3, a ~23% fill-rate cut
+           against 2 on a Retina display) and screenshotted at device scale
+           factor 2 against the original cap on the raked edges -- the
+           sharpest lines in the scene, and where a resolution cut would show
+           first. See DECISIONS.md for the result. */
+        dpr={[1, mobile ? 1.5 : 1.75]}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         camera={{ position: [0, 0, CAM_Z], fov: 45 }}
         onCreated={({ gl, invalidate }) => {

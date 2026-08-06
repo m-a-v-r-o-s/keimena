@@ -1,19 +1,44 @@
-import { GFS_Didot, Literata, JetBrains_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
+import { Literata } from 'next/font/google';
 import CanvasMount from '@/components/three/CanvasMount';
 import Loader from '@/components/Loader';
 import './globals.css';
 
-/* All three verified for Greek coverage against the Google Fonts API and all
- * three are OFL -- no commercial licence anywhere in this stack. DECISIONS D1. */
+/* All four faces are OFL -- no commercial licence anywhere in this stack.
+ * DECISIONS D1.
+ *
+ * Didot and Mono are self-hosted, subset to exactly this site's own glyph
+ * set (plan.md Phase 4.2 -- tools/glyphs.mjs derives the set, tools/subset-
+ * fonts.mjs runs it through fonttools into fonts/): real, measured wins,
+ * ~22KB->21.3KB and ~49KB->36.5KB.
+ *
+ * Literata stayed on next/font/google -- tried self-hosting it too and
+ * measured it WORSE, not better: subset correctly (glyph set derived, real
+ * kerning/mark positioning preserved, see the false starts recorded in
+ * DECISIONS.md before landing there), it still subsetted out to ~120KB,
+ * against Next's own delivery of it at roughly 72KB for this same page. The
+ * reason is structural, not a mistake to fix: Literata is a two-axis
+ * variable font (opsz+wght) genuinely used across its full weight range in
+ * this codebase (tokens.css sets 400/500/700 via CSS font-weight, all
+ * mapped onto the SAME wght axis -- see --weight-body/-md/-b), so keeping
+ * the axis (the plan's own instruction: do not instance, or every size on
+ * the page shifts) keeps the gvar table's real cost regardless of how few
+ * glyphs are requested. Splitting into separate latin/greek files the way
+ * Google does barely moved the number (~2KB) when tested, so that was not
+ * the missing piece either. Reported and kept on Google's CDN rather than
+ * forced self-hosted at a real cost, the same call Phase 3.1 made for
+ * three.js tree-shaking: measure, and revert what the plan predicted would
+ * help but measurably does not. */
 
-const didot = GFS_Didot({
-  // GFS Didot ships weight 400 only, with no italic. Do not add weights here;
-  // the API rejects them, and asking CSS for bold yields synthetic fake-bold
-  // that smears the Didone hairlines.
+const didot = localFont({
+  // GFS Didot ships weight 400 only, with no italic -- unchanged from the
+  // next/font/google call this replaced. Asking CSS for bold would still
+  // yield synthetic fake-bold that smears the Didone hairlines.
+  src: '../fonts/gfs-didot.woff2',
   weight: '400',
-  subsets: ['greek', 'latin'],
   display: 'swap',
   variable: '--f-didot',
+  adjustFontFallback: 'serif',
 });
 
 const literata = Literata({
@@ -34,7 +59,13 @@ const literata = Literata({
  * in italic because it is an aside, and that is a design decision, not a
  * loading one. So the face stays, its @font-face stays, and only the <link
  * rel=preload> goes: the browser fetches it if and when the hint is styled.
- * Same typography, off the critical path. */
+ * Same typography, off the critical path.
+ *
+ * Also next/font/google, matching literata above -- not preloaded either way,
+ * so the byte-size argument for self-hosting never applied to this one; only
+ * the complexity would have (a merged variable font, or two chained files
+ * the way the abandoned attempt split it -- see git history if this is ever
+ * revisited). */
 const literataItalic = Literata({
   subsets: ['greek', 'latin'],
   display: 'swap',
@@ -43,17 +74,18 @@ const literataItalic = Literata({
   variable: '--f-literata-italic',
 });
 
-const mono = JetBrains_Mono({
-  subsets: ['greek', 'latin'],
+const mono = localFont({
+  src: '../fonts/jetbrains-mono.woff2',
   display: 'swap',
   variable: '--f-mono',
+  adjustFontFallback: 'monospace',
 });
 
 export const metadata = {
   metadataBase: new URL('https://example.invalid'),
   title: {
     default: 'Πέτρος Μάρκαρης',
-    template: '%s — Πέτρος Μάρκαρης',
+    template: '%s - Πέτρος Μάρκαρης',
   },
   description:
     'Κατάλογος έργων του Πέτρου Μάρκαρη: τα μυθιστορήματα του αστυνόμου Κώστα Χαρίτου, η Τριλογία της Κρίσης, και τα υπόλοιπα γραπτά.',

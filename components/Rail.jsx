@@ -94,6 +94,88 @@ export default function Rail({ books, locale, current, onJump, backHref }) {
     };
   }, []);
 
+  /* Mobile only, same reasoning shape as the fade effect above: a plain
+   * media-query gate, nothing running at all on desktop.
+   *
+   * Every tick sits `itemHeight + gap` (18 CSS px) below the last one, a
+   * stride that is exactly representable in CSS pixels but almost never in
+   * DEVICE pixels -- most phones report a fractional devicePixelRatio (2.625,
+   * 2.75, 3.5 are common on Android; even iOS hits one under certain
+   * accessibility zoom levels). 18 * a fractional dpr isn't a whole number,
+   * so each tick's absolute top, in real device pixels, lands at a
+   * different fraction of a pixel than the one above it -- the fraction
+   * cycles through the list rather than staying constant. A box whose edge
+   * falls ON a device pixel paints crisp; a box whose edge falls BETWEEN two
+   * gets antialiased across both, which reads as a softer, thinner line next
+   * to its crisp neighbours -- seventeen identical 5px lines end up looking
+   * like they're not all the same weight, even though every one of them is
+   * genuinely 5px in CSS. (Confirmed by sampling actual rendered pixels at a
+   * fractional dpr: alternating ticks came out with a hard edge vs. a
+   * half-intensity antialiased one.)
+   *
+   * The fix has to happen after layout, in JS, because only JS can read
+   * devicePixelRatio and a live getBoundingClientRect -- no CSS value can
+   * express "wherever this box's edge actually lands on screen, nudge it to
+   * the nearest device pixel." For each tick this measures its line's real
+   * top in device pixels and applies the leftover fraction back as a CSS
+   * translateY on the TICK (the button, not the line) -- the line already
+   * owns `transform` for its own scaleX taper, so correcting there would
+   * clobber it; the button has no transform of its own and moving it moves
+   * its line by the same rigid offset. Snapping only the top edge (not
+   * height) is enough: with a fixed height, every bottom edge is then the
+   * same snapped top plus one constant, dpr-scaled height, so every tick's
+   * bottom lands at the same fraction as every other tick's -- identical to
+   * each other even if not itself perfectly crisp. Reset to '' before
+   * re-measuring on resize, or a stale correction would compound into the
+   * new one. */
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 899px)');
+    let frame = 0;
+
+    const snap = () => {
+      frame = 0;
+      const root = rootRef.current;
+      if (!root) return;
+      const dpr = window.devicePixelRatio || 1;
+      root.querySelectorAll('.rail__tick').forEach((tick) => {
+        tick.style.transform = '';
+        const line = tick.querySelector('.rail__tickLine');
+        if (!line) return;
+        const top = line.getBoundingClientRect().top * dpr;
+        const delta = (Math.round(top) - top) / dpr;
+        tick.style.transform = `translateY(${delta}px)`;
+      });
+    };
+
+    const onResize = () => {
+      if (!frame) frame = requestAnimationFrame(snap);
+    };
+
+    const sync = () => {
+      window.removeEventListener('resize', onResize);
+      if (frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      }
+      if (mq.matches) {
+        window.addEventListener('resize', onResize);
+        snap();
+      } else {
+        rootRef.current?.querySelectorAll('.rail__tick').forEach((tick) => {
+          tick.style.transform = '';
+        });
+      }
+    };
+
+    sync();
+    mq.addEventListener('change', sync);
+    return () => {
+      mq.removeEventListener('change', sync);
+      window.removeEventListener('resize', onResize);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
   /**
    * The rail's hover taper -- length and brightness are two separate
    * questions here, deliberately decoupled.

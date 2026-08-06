@@ -63,13 +63,6 @@
   --color-rule-strong:   oklch(94.8% 0.013 82.4 / 0.32);
   --rule-hairline:       1px;
 
-  /* The printed sheet the room is papered with: how big one tile of
-   * /textures/background.webp is laid out on screen. A LENGTH, never a
-   * percentage or cover/contain -- the sheet is square and the viewport is
-   * not, so scaling it to the window would size a drawn column by the reader's
-   * monitor. At 512px the tile is 1:1 on a 2x screen against the published
-   * sheet, and a laptop viewport holds about three of them across. */
-  --ground-tile:         512px;
 
   /* One book's row in the stack. A token because two rules need to agree on it:
    * the slot's own height, and the empty row the stack opens with. */

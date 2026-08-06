@@ -269,7 +269,16 @@ export const POSE = {
   upright: {
     driver: 'height',
     yaw: 0.34,
-    yawMobile: 0.24,
+    /* Steeper than desktop's own yaw, not shallower -- the opposite of what
+       "mobile keeps more of the cover on-screen" would suggest. At anything
+       near front-on, env.js's KEY softbox lands its reflection in the middle
+       of the flat cover panel, not the curved joint beside it, and reads as
+       a stray bright disc sitting on the artwork rather than as a highlight
+       on a surface. Swept the full range on a phone-width render across
+       every cover in the catalogue (light and dark, flat colour and photo):
+       still bad through 0.31, briefly worse around 0.38 where the joint's
+       own curve sweeps back into the same window, clean from ~0.36 on. */
+    yawMobile: 0.4,
     pitch: -0.05,
     /* A small settle, not a wobble: reused from the same scroll-driven
        `progress` the stack's own `transit` reads (see BookVolume.jsx), so a

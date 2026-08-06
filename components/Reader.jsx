@@ -109,7 +109,7 @@ export default function Reader({ books, locale, currentId }) {
            back to the shelf, not a walk through every book scrolled past. */
         const s = dict(locale);
         window.history.replaceState(window.history.state, '', `/books/${b.id}/`);
-        document.title = `${bookTitle(b, locale)} — ${s.siteName}`;
+        document.title = `${bookTitle(b, locale)} - ${s.siteName}`;
       }
     };
     const onScroll = () => {

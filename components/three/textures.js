@@ -97,4 +97,10 @@ export function surface(url, repeatX, repeatY) {
 
 
 export const coverUrl = (id) => `/covers/${id}/front.webp`;
+/* The stacked pose's own front -- 320x480 against the full 683x1024, built by
+ * tools/covers.mjs's buildLicensedFrontSmall. The stack shows a book raked
+ * almost flat (POSE.stacked.rake in book-model.js), the cover a sliver a few
+ * pixels deep, so the full photograph was resolution spent on nothing a
+ * reader could see. See BookVolume.jsx for which pose gets which sheet. */
+export const coverSmallUrl = (id) => `/covers/${id}/front-sm.webp`;
 export const spineUrl = (id) => `/covers/${id}/spine.webp`;

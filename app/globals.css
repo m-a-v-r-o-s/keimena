@@ -64,7 +64,9 @@ html {
  * a page already running WebGL, and is the one thing iOS Safari reliably gets
  * wrong. A fixed layer is composited once and then left alone.
  *
- * REPEATED at a fixed tile, never stretched -- see --ground-tile.
+ * Shown once, sized to cover -- not repeated at a tile. (An earlier version
+ * of this sheet, newbg.webp, was tiled at a fixed 512x512 grid; see the
+ * comment on the rule below for why that was abandoned.)
  *
  * z-index -2 puts it behind the canvas (0) and the page (.shell, 2), and above
  * the document's own background. It has to live on html rather than inside
@@ -78,21 +80,19 @@ html::before {
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  /* EXPERIMENTAL SWAP, for a live look only -- not final, not run through
-     tools/covers.mjs's texture pipeline yet. newbg.webp (the 17-book-colour
-     composite) doesn't tile: tested by compositing it into the site's real
-     512x512 --ground-tile grid, and it shows hard seams plus an aspect-ratio
-     squash. Shown once instead, sized to cover, no repeat -- sidesteps the
-     seam problem entirely since a single fixed full-bleed layer never meets
-     its own edge. Revert to the original two lines (still below, commented)
-     if this isn't the direction. */
+  /* newbg.webp (the 17-book-colour composite) doesn't tile: tested by
+     compositing it into a 512x512 grid, and it shows hard seams plus an
+     aspect-ratio squash. Shown once instead, sized
+     to cover, no repeat -- sidesteps the seam problem entirely since a single
+     fixed full-bleed layer never meets its own edge. On the critical path
+     twice over (painted by both this rule and .loader below, so it gates the
+     first frame the reader ever sees) -- recompressed 1536x1024 -> 1280x853
+     at quality 68 (plan.md Phase 1.4), 193KB -> ~19KB, verified against no
+     visible upscale banding at 2560x1440. */
   background-image: url('/textures/newbg-test.webp');
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
-  /* background-image: url('/textures/background.webp');
-  background-repeat: repeat;
-  background-size: var(--ground-tile) var(--ground-tile); */
 }
 
 /* The book's own room, washed over the sheet.
@@ -262,10 +262,6 @@ a:hover {
  * a scrollbar -- it silently clips, putting real navigation out of reach. So
  * the bar wraps to two rows instead: wordmark, then links and locale beneath.
  */
-
-/* ---- Series page ---------------------------------------------------------
- * Book accents are suppressed here: 27 colours in one viewport is a swatch
- * library, not a shelf. DESIGN.md section 2. */
 
 /* ---- Footer --------------------------------------------------------------- */
 
@@ -959,7 +955,11 @@ a:hover {
   white-space: nowrap;
   pointer-events: none;
   color: var(--book-text, var(--color-text));
-  font-family: var(--font-display);
+  /* Mono, not display -- this font is already self-hosted and loaded
+     elsewhere on the page (.meta, .spinebar__imprint, badges), so reusing
+     it here costs zero extra bytes. Its subset carries the full Greek
+     block same as Didot (tools/glyphs.mjs), so Greek titles render fine. */
+  font-family: var(--font-mono);
   font-size: var(--text-sm);
 }
 
@@ -1340,11 +1340,15 @@ a:hover {
  * this one? -- and this answers it without making the reader commit to the
  * reading view and then come back.
  *
- * Fixed to the viewport rather than tracked to the book: the book is moving
- * under the reader's own pointer, and a label chasing it is a label that
- * cannot be read. It lands in one of the four corners, rolled fresh in
- * Catalogue.jsx each time a drag starts, so the same corner isn't spent by
- * the same spot on the shelf every time.
+ * Fixed to the viewport rather than tracked to the book: the book only
+ * rotates in place while it's held, it never travels across the screen, so
+ * "fixed" and "tracked" would land in the same spot anyway -- and fixed is
+ * simpler. It lands in one of the four corners, picked in Shelf.jsx each
+ * time a drag starts: top-vs-bottom is whichever half of the viewport the
+ * dragged book is NOT in (so the label can never land on top of the book
+ * it's describing -- see the DRAG_BOOK effect there), left-vs-right is
+ * random, purely so the same corner isn't spent by the same spot on the
+ * shelf every time.
  *
  * A sharp-edged card: square corners, no radius, no border -- so it reads as
  * a cut label rather than a soft tooltip. Wide rather than tall: a book's
@@ -1583,11 +1587,11 @@ a:hover {
   }
 
   .rail__tick {
-    width: 20px;
+    width: 24px;
   }
 
   .rail__tickLine {
-    width: 20px;
+    width: 24px;
     /* Same resting proportion as desktop's 0.78 (see the base rule above) --
        the previous 0.5 here shrank the line on TOP OF the already-smaller
        mobile width, leaving a resting mark too faint to read as a line. */
@@ -1640,13 +1644,23 @@ a:hover {
  * :focus-visible, not :focus-within -- pressing a book to drag it also focuses
  * it, and a :focus-within rule would bring the flat bar back up over the
  * volume for the whole gesture and leave it there afterwards.
+ *
+ * Also gated on html.using-keyboard (BookCanvas.jsx tracks it from a real Tab
+ * keydown, cleared on the next pointerdown) -- :focus-visible on its own
+ * treats a FRESH page's very first programmatic focus as keyboard-like
+ * regardless of how the reader actually arrived, because no input modality
+ * has been observed yet in that document. Shelf.jsx's hash-restore effect
+ * (`/#book-<id>`, landing back on the spine that was clicked) calls exactly
+ * that kind of focus on mount, on every load -- without this gate the flat
+ * bar sat lit in front of that one book's already-rendered volume until the
+ * reader's first click or tap proved it wasn't a keyboard session.
  */
 .webgl-on .slot__hit {
   opacity: 0;
   transition: opacity var(--dur-base) var(--ease-out);
 }
 
-.webgl-on .slot__hit:focus-visible {
+html.using-keyboard.webgl-on .slot__hit:focus-visible {
   opacity: 1;
 }
 
@@ -1838,10 +1852,11 @@ a:hover {
 /* The imprint, set at display scale. It is the largest type on the page after
    the catalogue's own title, which is the correct weighting: the books are
    theirs. */
-/* The publisher's own wordmark artwork (public/Keimena-Logo-Horizontal.png),
+/* The publisher's own wordmark artwork (public/Keimena-Logo-Horizontal.webp,
+   losslessly converted from the original PNG),
    not set type -- no webfont in this stack reproduces its lettering, so the
    real logo file is used directly. Same masked-span technique as
-   .head__imprint and .head__mark-glyph: the PNG ships as near-black glyphs on
+   .head__imprint and .head__mark-glyph: the artwork ships as near-black glyphs on
    transparency, so its own alpha channel supplies the SHAPE and this fill
    supplies the colour -- an <img> would paint its baked-in black regardless
    of the footer's colour scheme. role="img" + aria-label carries the name
@@ -1853,8 +1868,8 @@ a:hover {
   /* Source artwork is 804x85 of trimmed lettering. */
   aspect-ratio: 804 / 85;
   background-color: var(--color-text);
-  -webkit-mask-image: url('/Keimena-Logo-Horizontal.png');
-  mask-image: url('/Keimena-Logo-Horizontal.png');
+  -webkit-mask-image: url('/Keimena-Logo-Horizontal.webp');
+  mask-image: url('/Keimena-Logo-Horizontal.webp');
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;

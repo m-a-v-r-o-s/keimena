@@ -22,3 +22,19 @@ export const DRAG_BOOK = 'bookdrag:change';
  * row of fallback spine bars the loader exists to replace.
  */
 export const CANVAS_READY = 'bookcanvas:ready';
+
+/**
+ * Which tracked slot is nearest the viewport's middle, as an index into
+ * BookCanvas's own `slotsRef` (which on the shelf page is the `books` array
+ * in DOM order, one to one). `detail.index`.
+ *
+ * Published from `place()` in BookCanvas.jsx, which already measures every
+ * slot's rect every frame for its own layout purposes and already computes
+ * this exact quantity as `s.progress`. Shelf.jsx used to run a second,
+ * independent rAF-throttled scroll listener doing its own
+ * `getBoundingClientRect` pass over the same elements to answer the same
+ * question -- "one tracker, multiple consumers" (plan.md Phase 2.5) is the
+ * fix: compute it once, here, and let every consumer read the broadcast
+ * instead of re-deriving it.
+ */
+export const SHELF_CURRENT = 'bookshelf:current';

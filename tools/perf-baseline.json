@@ -1,0 +1,77 @@
+{
+  "capturedAt": "2026-08-06T01:38:34.170Z",
+  "routes": {
+    "/": {
+      "timeToLoadedMs": 1388,
+      "fcpMs": 184,
+      "buckets": {
+        "document": {
+          "raw": 78505,
+          "gz": 19732,
+          "count": 1
+        },
+        "script": {
+          "raw": 1413390,
+          "gz": 392777,
+          "count": 14
+        },
+        "stylesheet": {
+          "raw": 36697,
+          "gz": 8247,
+          "count": 2
+        },
+        "font": {
+          "raw": 143176,
+          "gz": 144210,
+          "count": 6
+        },
+        "image": {
+          "raw": 1658916,
+          "gz": 1663757,
+          "count": 29
+        },
+        "other": {
+          "raw": 240943,
+          "gz": 65543,
+          "count": 5
+        }
+      }
+    },
+    "/books/faust/": {
+      "timeToLoadedMs": 931,
+      "fcpMs": 140,
+      "buckets": {
+        "document": {
+          "raw": 91821,
+          "gz": 20497,
+          "count": 1
+        },
+        "script": {
+          "raw": 1413390,
+          "gz": 392777,
+          "count": 14
+        },
+        "stylesheet": {
+          "raw": 36697,
+          "gz": 8247,
+          "count": 2
+        },
+        "font": {
+          "raw": 227520,
+          "gz": 229073,
+          "count": 9
+        },
+        "image": {
+          "raw": 1200946,
+          "gz": 1205618,
+          "count": 28
+        },
+        "other": {
+          "raw": 55842,
+          "gz": 16226,
+          "count": 1
+        }
+      }
+    }
+  }
+}

@@ -3,7 +3,7 @@ import Shelf from '@/components/Shelf';
 import Footer from '@/components/Footer';
 import AuthorPoster from '@/components/AuthorPoster';
 import { DEFAULT_LOCALE, t as dict } from '@/lib/i18n';
-import { AUTHOR, catalogueYears, shelfOrder } from '@/lib/content';
+import { AUTHOR, catalogueYears, shelfBooks } from '@/lib/content';
 
 export function generateMetadata() {
   const s = dict(DEFAULT_LOCALE);
@@ -37,7 +37,7 @@ export function generateMetadata() {
  */
 export default function CataloguePage() {
   const locale = DEFAULT_LOCALE;
-  const books = shelfOrder();
+  const books = shelfBooks();
   const { oldest, newest } = catalogueYears(books);
 
   return (
