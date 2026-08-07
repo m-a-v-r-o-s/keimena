@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { NoToneMapping, SRGBColorSpace, PMREMGenerator, Object3D } from 'three';
 import { buildEnvironment } from './env';
 import BookVolume from './BookVolume';
@@ -83,8 +83,32 @@ function Scene({ slotsRef, version, mobile, reduced }) {
     };
   }, [gl, scene, invalidate]);
 
-  useEffect(() => {
-    camera.fov = (2 * Math.atan(size.height / 2 / CAM_Z) * 180) / Math.PI;
+  /* Kept in step with `place()` below (BookCanvas's own rAF loop), not with
+     r3f's `size` -- `size` comes off a ResizeObserver on the canvas's own
+     container (react-use-measure), which is async and batched on its own
+     schedule, same as r3f's own internal `camera.aspect` update
+     (updateCamera() in r3f's core, called independently of anything here).
+     `place()` reads window.innerWidth/innerHeight SYNCHRONOUSLY every tick
+     and positions/sizes every book straight off that. On a real phone the
+     viewport height changes continuously while scrolling (the browser
+     chrome's own toolbar hiding and reappearing) -- desktop dev tools never
+     animates this, which is why this only ever showed up on a real device.
+     Whenever r3f's async size lags even one frame behind the live window
+     dimensions, the camera projects for one viewport height while the
+     books are already positioned for another, which reads as a spurious
+     zoom pulse until the two resync. Reading the exact same live numbers
+     place() does, every rendered frame, makes that disagreement impossible
+     rather than just narrowing the window for it. */
+  const lastW = useRef(-1);
+  const lastH = useRef(-1);
+  useFrame(() => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    if (w === lastW.current && h === lastH.current) return;
+    lastW.current = w;
+    lastH.current = h;
+    camera.fov = (2 * Math.atan(h / 2 / CAM_Z) * 180) / Math.PI;
+    camera.aspect = w / h;
     camera.position.set(0, 0, CAM_Z);
     /* The scene is a thin slab around z=0, roughly a viewport deep. Spanning
        1..3600 spent almost all of the depth buffer's precision on empty space
@@ -93,8 +117,7 @@ function Scene({ slotsRef, version, mobile, reduced }) {
     camera.near = CAM_Z * 0.45;
     camera.far = CAM_Z * 1.75;
     camera.updateProjectionMatrix();
-    invalidate();
-  }, [camera, size.height, invalidate]);
+  });
 
   /* Re-render the slot list only when the set of books changes -- never on
      scroll, which mutates coordinates in place instead. */
@@ -177,6 +200,10 @@ export default function BookCanvas() {
   const [reduced, setReduced] = useState(false);
   const invalidateRef = useRef(() => {});
   const drag = useRef(null);
+  /* Pointer effect below has `[]` deps, so it can't see `mobile` state --
+     this ref is kept in sync alongside it instead of re-subscribing the
+     listeners on every breakpoint crossing. */
+  const mobileRef = useRef(false);
   const rafRef = useRef(0);
   /* The last index published on SHELF_CURRENT (Phase 2.5) -- compared every
      tick so the event only fires on an actual change, the same discipline
@@ -416,6 +443,7 @@ function stageReturns(slots) {
     const mqReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     const syncMq = () => {
       setMobile(mqMobile.matches);
+      mobileRef.current = mqMobile.matches;
       setReduced(mqReduced.matches);
     };
     syncMq();
@@ -554,6 +582,10 @@ function stageReturns(slots) {
       if (e.button != null && e.button !== 0) return;
       const slot = slotFor(e.target);
       if (!slot || slot.dim) return;
+      /* On the home page's stacked pile, the whole width is one big touch
+         target for scrolling -- letting a horizontal swipe there also spin
+         the book turns every attempt to scroll past it into a coin flip. */
+      if (mobileRef.current && slot.pose === 'stacked') return;
       drag.current = { slot, x: e.clientX, y: e.clientY, moved: 0 };
     };
 
