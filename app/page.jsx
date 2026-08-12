@@ -4,12 +4,26 @@ import Footer from '@/components/Footer';
 import AuthorPoster from '@/components/AuthorPoster';
 import { DEFAULT_LOCALE, t as dict } from '@/lib/i18n';
 import { AUTHOR, catalogueYears, shelfBooks } from '@/lib/content';
+import { SITE_URL } from '@/lib/site';
 
 export function generateMetadata() {
   const s = dict(DEFAULT_LOCALE);
+  const description = AUTHOR.bio_short_el;
   return {
     title: s.worksTitle,
-    description: AUTHOR.bio_short_el,
+    description,
+    alternates: { canonical: '/' },
+    /* A full, self-contained openGraph object -- Next replaces rather than
+       deep-merges a page's `openGraph` against the root layout's, so title/
+       description/url/type/image all have to be repeated here even though
+       the root layout already sets its own defaults (see app/layout.jsx). */
+    openGraph: {
+      title: s.worksTitle,
+      description,
+      url: SITE_URL,
+      type: 'website',
+      images: [{ url: '/og-home.jpg', width: 1200, height: 630, alt: s.worksTitle }],
+    },
   };
 }
 

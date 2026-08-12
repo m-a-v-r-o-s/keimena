@@ -2454,3 +2454,134 @@ html:not([data-loaded]) .rail {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   COOKIE CONSENT
+   Plain fixed bar, bottom of viewport, above everything else (z-index 3 --
+   one past .shell's 2). Site chrome, not part of the reading document, so it
+   borrows the footer's own black-and-hairline language rather than a book's
+   per-page tint.
+   ========================================================================== */
+.cookieBanner {
+  position: fixed;
+  z-index: 3;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--page-margin);
+  background-color: #000;
+  border-top: var(--rule-hairline) solid var(--color-rule);
+}
+
+.cookieBanner p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.cookieBanner__actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.cookieBanner__actions button {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--track-meta);
+  /* min-height (not just em padding) so the tap target clears 44px on
+     mobile regardless of the mono face's actual line-height. */
+  min-height: 44px;
+  padding: 0.6em 1em;
+  display: inline-flex;
+  align-items: center;
+  border: var(--rule-hairline) solid var(--color-rule-strong);
+  border-radius: var(--radius-ui);
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.cookieBanner__accept {
+  background-color: var(--color-text) !important;
+  color: var(--color-ink-canvas) !important;
+}
+
+.cookieBanner__actions button:hover,
+.cookieBanner__actions button:focus-visible {
+  border-color: var(--color-text);
+}
+
+@media (max-width: 767px) {
+  .cookieBanner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cookieBanner__actions {
+    justify-content: flex-end;
+  }
+}
+
+/* ==========================================================================
+   FOOTER LEGAL LINKS
+   Two plain text links, in the same fine-print register as the lines above
+   them -- not buttons, not a second nav bar.
+   ========================================================================== */
+.foot__legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.foot__legal a {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   404 / STATIC TEXT PAGES
+   ========================================================================== */
+.notFound__cta {
+  display: inline-flex;
+  width: auto;
+  padding-inline: var(--space-lg);
+  margin-top: var(--space-md);
+}
+
+/* Plain long-form prose (privacy, terms): the type primitives already carry
+   the display face for headings and --measure-read for paragraph width, so
+   this only adds the vertical rhythm a stack of headings and paragraphs
+   needs that a single intro block never did. */
+.legal h2 {
+  margin-top: var(--space-2xl);
+  font-size: var(--text-xl);
+}
+
+.legal p,
+.legal li {
+  color: var(--color-text-muted);
+}
+
+.legal ul {
+  padding-inline-start: 1.2em;
+}
+
+.legal__notice {
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  border: var(--rule-hairline) solid var(--color-rule-strong);
+  border-radius: var(--radius-ui);
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+}

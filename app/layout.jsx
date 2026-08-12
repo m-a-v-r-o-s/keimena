@@ -2,6 +2,9 @@ import localFont from 'next/font/local';
 import { Literata } from 'next/font/google';
 import CanvasMount from '@/components/three/CanvasMount';
 import Loader from '@/components/Loader';
+import CookieConsent from '@/components/CookieConsent';
+import Analytics from '@/components/Analytics';
+import { SITE_URL } from '@/lib/site';
 import './globals.css';
 
 /* All four faces are OFL -- no commercial licence anywhere in this stack.
@@ -81,14 +84,30 @@ const mono = localFont({
   adjustFontFallback: 'monospace',
 });
 
+const DESCRIPTION =
+  'Κατάλογος έργων του Πέτρου Μάρκαρη: τα μυθιστορήματα του αστυνόμου Κώστα Χαρίτου, η Τριλογία της Κρίσης, και τα υπόλοιπα γραπτά.';
+
 export const metadata = {
-  metadataBase: new URL('https://example.invalid'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Πέτρος Μάρκαρης',
     template: '%s - Πέτρος Μάρκαρης',
   },
-  description:
-    'Κατάλογος έργων του Πέτρου Μάρκαρη: τα μυθιστορήματα του αστυνόμου Κώστα Χαρίτου, η Τριλογία της Κρίσης, και τα υπόλοιπα γραπτά.',
+  description: DESCRIPTION,
+  /* Site-wide defaults. A page that sets its own `openGraph` (every book
+     page does, for its own cover) REPLACES this object wholesale rather than
+     merging into it -- Next does not deep-merge nested metadata objects
+     across a layout/page pair -- so each page that overrides openGraph also
+     repeats `type`/`url` itself rather than relying on inheriting them from
+     here. See app/page.jsx and app/books/[id]/page.jsx. */
+  openGraph: {
+    title: 'Πέτρος Μάρκαρης',
+    description: DESCRIPTION,
+    url: SITE_URL,
+    siteName: 'Πέτρος Μάρκαρης',
+    locale: 'el_GR',
+    type: 'website',
+  },
 };
 
 export const viewport = {
@@ -140,6 +159,11 @@ export default function RootLayout({ children }) {
             afford. Moved up from the old [locale] layout, unchanged. */}
         <CanvasMount />
         <div className="shell">{children}</div>
+
+        {/* Off by default -- see components/Analytics.jsx: nothing loads
+            without both a real NEXT_PUBLIC_GA_ID and the reader's consent. */}
+        <Analytics />
+        <CookieConsent />
       </body>
     </html>
   );

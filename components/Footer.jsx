@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { t as dict } from '@/lib/i18n';
 import { AUTHOR } from '@/lib/content';
 
@@ -95,6 +96,7 @@ export default function Footer({ locale, count, from, to }) {
                       height={h}
                       alt=""
                       aria-hidden="true"
+                      loading="lazy"
                     />
                     <span className="visually-hidden">
                       <span lang="en">{s[labelKey]}</span> ({s.newTab})
@@ -114,6 +116,21 @@ export default function Footer({ locale, count, from, to }) {
             <span className="foot__testTag">{s.testTag}</span>
             {s.testNotice}
           </p>
+
+          {/* The only cross-links to the site's two static text pages --
+              nowhere else on the site has a nav bar to hold them (see
+              Nav.jsx's own reasoning for staying mark-only), and the
+              footer's fine print is where a reader expects to find them. */}
+          <nav aria-label={s.legalLabel}>
+            <ul className="foot__legal">
+              <li>
+                <Link href="/privacy/">{s.privacyLabel}</Link>
+              </li>
+              <li>
+                <Link href="/terms/">{s.termsLabel}</Link>
+              </li>
+            </ul>
+          </nav>
         </div>
       </div>
     </footer>

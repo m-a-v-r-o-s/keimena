@@ -236,7 +236,14 @@ export default function AuthorPoster({ name, bio, photo, photoAlt }) {
       {/* The one copy that is real. Visually hidden while the fold is on show,
           and the visible poster below the breakpoint where folding is off. */}
       <div className="poster__flat">
-        <img className="poster__flatPhoto" src={photo} alt={photoAlt} width="350" height="350" />
+        <img
+          className="poster__flatPhoto"
+          src={photo}
+          alt={photoAlt}
+          width="350"
+          height="350"
+          loading="lazy"
+        />
         <h1 className="poster__flatName">{name}</h1>
         <p className="poster__flatBio">{bio}</p>
       </div>

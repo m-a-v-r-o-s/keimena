@@ -4,6 +4,7 @@ import Reader from '@/components/Reader';
 import Footer from '@/components/Footer';
 import { DEFAULT_LOCALE } from '@/lib/i18n';
 import { bookById, catalogueYears, describe, shelfOrder, title as bookTitle } from '@/lib/content';
+import { SITE_URL } from '@/lib/site';
 import grounds from '@/content/grounds.json';
 
 /* 17 real pages, decided at build time -- no id outside shelfOrder() is ever
@@ -23,11 +24,22 @@ export async function generateMetadata({ params }) {
     title,
     description: desc,
     alternates: { canonical: `/books/${id}/` },
-    /* metadataBase is still the app/layout.jsx placeholder, so these resolve
-       absolute against it -- a real follow-up, not this task's job (see
-       HANDOFF-book-pages.md's out-of-scope section). Every title already
-       has an og.png (tools/covers.mjs), licensed or not. */
-    openGraph: { title, description: desc, images: [`/covers/${id}/og.png`] },
+    /* metadataBase (app/layout.jsx) now resolves against the real SITE_URL
+       constant (lib/site.js), so these resolve absolute against that --
+       still a placeholder domain until the site has a real one, but a
+       single one, not three that could drift. Every title already has an
+       og.png (tools/covers.mjs), licensed or not. `type: 'book'` is a real
+       Open Graph object type (the protocol's own book vertical); `url` is
+       repeated here rather than inherited from the root layout's own
+       openGraph because Next replaces, not merges, a page's openGraph
+       object against its parent's. */
+    openGraph: {
+      title,
+      description: desc,
+      type: 'book',
+      url: `${SITE_URL}/books/${id}/`,
+      images: [`/covers/${id}/og.png`],
+    },
   };
 }
 
